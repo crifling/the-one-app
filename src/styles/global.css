@@ -157,12 +157,24 @@ main {
 }
 
 .card.tappable {
-  display: block;
   width: 100%;
   text-align: left;
 }
+/* Only force block when the card is NOT a flex row — otherwise this would
+   override `.row`'s flex layout (higher specificity) and stack the children,
+   leaving the right half of the card empty. */
+.card.tappable:not(.row) {
+  display: block;
+}
 
 .row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* Ensure a tappable row card stays a flex row (equal specificity to
+   `.card.tappable`, declared later so flex wins). */
+.card.row {
   display: flex;
   align-items: center;
   gap: 12px;
