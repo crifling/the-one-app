@@ -3,16 +3,19 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 import type {
   AppData,
+  BodyPartId,
   Exercise,
   Idea,
   Priority,
+  Program,
+  ProgramStep,
   Routine,
   RoutineSchedule,
   Task,
   Track,
   TrackAction,
   TrackType,
-  Workout,
+  WorkoutCategory,
 } from './types';
 import { CURRENT_VERSION, emptyAppData } from './defaults';
 import { idbStorage } from '../persistence/idbStorage';
@@ -31,9 +34,10 @@ const DATA_KEYS: (keyof AppData)[] = [
   'tasks',
   'routines',
   'routineProgress',
-  'workouts',
-  'workoutHistory',
-  'todaysWorkout',
+  'exercises',
+  'programs',
+  'sessions',
+  'todaysProgram',
   'settings',
   'seeded',
 ];
@@ -85,9 +89,25 @@ export interface StoreActions {
   deleteRoutine: (id: string) => void;
   toggleRoutineStepToday: (routineId: string, stepId: string) => void;
 
-  // workouts
-  setTodaysWorkout: (workoutId: string) => void;
-  completeWorkout: (workoutId: string, exercisesCompleted: number) => void;
+  // exercises (library)
+  addExercise: (input: NewExerciseInput) => string;
+  updateExercise: (id: string, patch: Partial<Pick<Exercise, 'title' | 'category' | 'bodyPart'>>) => void;
+  deleteExercise: (id: string) => void;
+
+  // programs
+  addProgram: (title: string) => string;
+  updateProgram: (id: string, patch: Partial<Pick<Program, 'title' | 'steps'>>) => void;
+  deleteProgram: (id: string) => void;
+
+  // today's program + history
+  setTodaysProgram: (programId: string) => void;
+  completeProgram: (programId: string, exercisesCompleted: number) => void;
+}
+
+export interface NewExerciseInput {
+  title: string;
+  category: WorkoutCategory;
+  bodyPart: BodyPartId;
 }
 
 export interface AppState extends AppData, StoreActions {
@@ -313,24 +333,94 @@ export const useStore = create<AppState>()(
         }));
       },
 
-      // ---- workouts ----
-      setTodaysWorkout: (workoutId) =>
-        set({ todaysWorkout: { workoutId, date: todayIso() } }),
+      // ---- exercises (library) ----
+      addExercise: (input) => {
+        const id = createId();
+        const ts = now();
+        const exercise: Exercise = {
+          id,
+          title: input.title.trim(),
+          category: input.category,
+          bodyPart: input.bodyPart,
+          createdAt: ts,
+          updatedAt: ts,
+        };
+        set((s) => ({ exercises: [exercise, ...s.exercises] }));
+        return id;
+      },
 
-      completeWorkout: (workoutId, exercisesCompleted) => {
-        const workout = get().workouts.find((w) => w.id === workoutId);
-        if (!workout) return;
+      updateExercise: (id, patch) =>
         set((s) => ({
-          workoutHistory: [
+          exercises: s.exercises.map((e) =>
+            e.id === id ? { ...e, ...patch, updatedAt: now() } : e,
+          ),
+        })),
+
+      deleteExercise: (id) =>
+        set((s) => ({
+          exercises: s.exercises.filter((e) => e.id !== id),
+          // Drop any program steps that referenced the deleted exercise.
+          programs: s.programs.map((p) => ({
+            ...p,
+            steps: p.steps.filter(
+              (step) => step.kind !== 'exercise' || step.exerciseId !== id,
+            ),
+          })),
+        })),
+
+      // ---- programs ----
+      addProgram: (title) => {
+        const id = createId();
+        const ts = now();
+        const program: Program = {
+          id,
+          title: title.trim(),
+          steps: [],
+          createdAt: ts,
+          updatedAt: ts,
+        };
+        set((s) => ({ programs: [...s.programs, program] }));
+        return id;
+      },
+
+      updateProgram: (id, patch: Partial<Pick<Program, 'title' | 'steps'>>) =>
+        set((s) => ({
+          programs: s.programs.map((p) => {
+            if (p.id !== id) return p;
+            const next = { ...p, ...patch, updatedAt: now() };
+            if (typeof next.title === 'string') next.title = next.title.trim();
+            return next;
+          }),
+        })),
+
+      deleteProgram: (id) =>
+        set((s) => ({
+          programs: s.programs.filter((p) => p.id !== id),
+          todaysProgram:
+            s.todaysProgram?.programId === id ? null : s.todaysProgram,
+        })),
+
+      // ---- today's program + history ----
+      setTodaysProgram: (programId) =>
+        set({ todaysProgram: { programId, date: todayIso() } }),
+
+      completeProgram: (programId, exercisesCompleted) => {
+        const program = get().programs.find((p) => p.id === programId);
+        if (!program) return;
+        const exercisesTotal = program.steps.filter(
+          (step: ProgramStep) => step.kind === 'exercise',
+        ).length;
+        set((s) => ({
+          sessions: [
             {
               id: createId(),
-              workoutId,
-              workoutName: workout.name,
+              programId,
+              programName: program.title,
               completedAt: now(),
               exercisesCompleted,
-              exercisesTotal: workout.exercises.length,
+              exercisesTotal,
             },
-            ...s.workoutHistory,
+            ...s.sessions,
           ],
         }));
       },
@@ -347,6 +437,3 @@ export const useStore = create<AppState>()(
     },
   ),
 );
-
-// Re-export helper types used by consumers.
-export type { Exercise, Workout };

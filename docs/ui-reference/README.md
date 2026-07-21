@@ -36,3 +36,22 @@ buttons switches screens without any JavaScript.
 - **Fokus nu (focus now)** — the one or two tracks currently prioritized on the home screen.
 - Separation between general tasks and track-specific actions.
 - A calm balance indicator across life areas (deliberately not a scoring system).
+
+### `workout-module-mockup.html`
+
+Interactive, JS-driven prototype (single self-contained file) of the **reworked
+Træning module** — the approved design behind the implementation. Open it and
+resize to a narrow viewport.
+
+Illustrates:
+
+- Three tabs: **Programmer**, **Øvelser** (reusable exercise library), **Historik**.
+- Exercises as reusable definitions (category · body part); a quick "Ny øvelse" form.
+- **Program builder** with read-only **view** vs **edit** mode (Rediger / Gem /
+  Annullér), a counted **exercise picker** (− N +), **Reps/Tid** toggle,
+  **weight (kg)** on weight-capable categories (Speediance), rest presets, pause
+  steps, duplicate and reorder.
+- A **player** stepping through sets with a rest-timer between sets.
+
+This is reference material; the shipped implementation lives in
+`src/features/workouts/`.

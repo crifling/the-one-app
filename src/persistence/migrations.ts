@@ -1,31 +1,133 @@
 import type { AppData } from '../store/types';
 import { CURRENT_VERSION, emptyAppData } from '../store/defaults';
+import { LIFE_AREAS } from '../data/lifeAreas';
+import { createId } from '../lib/id';
 
 /**
  * Migration framework.
  *
- * Each migration upgrades a document from version N to N+1. They are applied
- * in sequence, so an old document of any version is brought up to
- * CURRENT_VERSION one step at a time. Adding a future migration is just adding
- * an entry to `MIGRATIONS`.
+ * Each migration upgrades a document from version N to N+1. They are applied in
+ * sequence, so an old document of any version is brought up to CURRENT_VERSION
+ * one step at a time. Adding a future migration is just adding an entry to
+ * `MIGRATIONS`.
  *
- * Version 0 represents any legacy/unknown document (e.g. a pre-versioning
- * export or a backup missing fields). Migration 0 -> 1 fills in defaults.
+ * Migrations are intentionally self-contained (they do not depend on the
+ * current default/empty shape, which changes over time) so that an old document
+ * always upgrades deterministically.
+ *
+ * Version 0 represents any legacy/unversioned document.
  */
 
-type Migration = (data: Record<string, unknown>) => Record<string, unknown>;
+type AnyRecord = Record<string, unknown>;
+type Migration = (data: AnyRecord) => AnyRecord;
+
+const asArray = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+const now = () => new Date().toISOString();
 
 export const MIGRATIONS: Record<number, Migration> = {
-  // 0 -> 1: establish the baseline shape, filling any missing collections.
-  0: (data) => {
-    const base = emptyAppData() as unknown as Record<string, unknown>;
-    return {
-      ...base,
-      ...data,
-      version: 1,
-      // Ensure life areas are always the current built-in set.
-      lifeAreas: base.lifeAreas,
+  // 0 -> 1: establish the v1 baseline shape, filling any missing collections.
+  // `...data` first so unknown extra fields survive, then sanitized fields win.
+  0: (data) => ({
+    ...data,
+    lifeAreas: LIFE_AREAS,
+    tracks: asArray(data.tracks),
+    tasks: asArray(data.tasks),
+    routines: asArray(data.routines),
+    routineProgress:
+      data.routineProgress && typeof data.routineProgress === 'object'
+        ? data.routineProgress
+        : {},
+    workouts: asArray(data.workouts),
+    workoutHistory: asArray(data.workoutHistory),
+    todaysWorkout: data.todaysWorkout ?? null,
+    settings:
+      data.settings && typeof data.settings === 'object'
+        ? data.settings
+        : { userName: 'Claus' },
+    seeded: data.seeded === true,
+    version: 1,
+  }),
+
+  // 1 -> 2: split the reusable exercise library out of workouts, and turn each
+  // workout into a program made of ordered steps. Old embedded exercises are
+  // de-duplicated into library exercises by (category + title).
+  1: (data) => {
+    const oldWorkouts = asArray(data.workouts) as AnyRecord[];
+    const ts = now();
+
+    const exercises: AnyRecord[] = [];
+    const libraryByKey = new Map<string, string>(); // key -> exerciseId
+
+    const ensureExercise = (title: string, category: string): string => {
+      const key = `${category}|${title.trim().toLowerCase()}`;
+      const existing = libraryByKey.get(key);
+      if (existing) return existing;
+      const id = createId();
+      libraryByKey.set(key, id);
+      exercises.push({
+        id,
+        title: title.trim() || 'Øvelse',
+        category,
+        bodyPart: 'fullbody', // unknown in v1; user can refine later
+        createdAt: ts,
+        updatedAt: ts,
+      });
+      return id;
     };
+
+    const programs = oldWorkouts.map((w) => {
+      const category = typeof w.category === 'string' ? w.category : 'bodyweight';
+      const steps = asArray(w.exercises).map((raw) => {
+        const oe = raw as AnyRecord;
+        const durationSeconds =
+          typeof oe.durationSeconds === 'number' ? oe.durationSeconds : null;
+        const reps = typeof oe.reps === 'number' ? oe.reps : null;
+        const sets = typeof oe.sets === 'number' ? oe.sets : 1;
+        const exerciseId = ensureExercise(
+          typeof oe.name === 'string' ? oe.name : 'Øvelse',
+          category,
+        );
+        return {
+          id: createId(),
+          kind: 'exercise',
+          exerciseId,
+          sets: Math.max(1, sets),
+          mode: durationSeconds ? 'time' : 'reps',
+          amount: durationSeconds ?? reps ?? 10,
+          restSeconds: typeof oe.restSeconds === 'number' ? oe.restSeconds : 0,
+          weightKg: 0,
+        };
+      });
+      return {
+        id: typeof w.id === 'string' ? w.id : createId(),
+        title: typeof w.name === 'string' ? w.name : 'Program',
+        steps,
+        createdAt: ts,
+        updatedAt: ts,
+      };
+    });
+
+    const oldToday = data.todaysWorkout as AnyRecord | null | undefined;
+    const todaysProgram =
+      oldToday && typeof oldToday.workoutId === 'string'
+        ? { programId: oldToday.workoutId, date: oldToday.date }
+        : null;
+
+    const sessions = (asArray(data.workoutHistory) as AnyRecord[]).map((s) => ({
+      id: typeof s.id === 'string' ? s.id : createId(),
+      programId: typeof s.workoutId === 'string' ? s.workoutId : '',
+      programName: typeof s.workoutName === 'string' ? s.workoutName : 'Program',
+      completedAt: typeof s.completedAt === 'string' ? s.completedAt : ts,
+      exercisesCompleted:
+        typeof s.exercisesCompleted === 'number' ? s.exercisesCompleted : 0,
+      exercisesTotal: typeof s.exercisesTotal === 'number' ? s.exercisesTotal : 0,
+    }));
+
+    const next: AnyRecord = { ...data, exercises, programs, sessions, todaysProgram, version: 2 };
+    delete next.workouts;
+    delete next.workoutHistory;
+    delete next.todaysWorkout;
+    return next;
   },
 };
 
@@ -34,10 +136,8 @@ export const MIGRATIONS: Record<number, Migration> = {
  * Unknown/missing version is treated as 0.
  */
 export function runMigrations(input: unknown): AppData {
-  let data =
-    input && typeof input === 'object'
-      ? { ...(input as Record<string, unknown>) }
-      : {};
+  let data: AnyRecord =
+    input && typeof input === 'object' ? { ...(input as AnyRecord) } : {};
 
   let version = typeof data.version === 'number' ? data.version : 0;
 
@@ -46,15 +146,15 @@ export function runMigrations(input: unknown): AppData {
     if (!migrate) {
       // No migration defined for this step: fail safe to defaults merged with
       // whatever we have, then stop.
-      data = { ...(emptyAppData() as unknown as Record<string, unknown>), ...data };
+      data = { ...(emptyAppData() as unknown as AnyRecord), ...data };
       break;
     }
     data = migrate(data);
     version = typeof data.version === 'number' ? data.version : version + 1;
   }
 
-  // Documents newer than we understand are used as-is but stamped down to the
-  // version we know, so the app keeps working (best effort).
+  // Ensure every current field exists, then stamp the version.
+  data = { ...(emptyAppData() as unknown as AnyRecord), ...data };
   data.version = CURRENT_VERSION;
   return data as unknown as AppData;
 }

@@ -11,7 +11,7 @@ import {
   getNextAction,
 } from '../../store/selectors';
 import { todaysRoutines, routineCompletion } from '../routines/logic';
-import { resolveTodaysWorkout, workoutSummary } from '../workouts/logic';
+import { resolveTodaysProgram, programSummary, estimateMinutes } from '../workouts/logic';
 import { formatDayHeading, todayIso } from '../../lib/dates';
 import { PriorityTag } from '../tasks/PriorityTag';
 import { IdeaComposer } from '../tracks/IdeaComposer';
@@ -24,7 +24,7 @@ export function TodayScreen() {
   const routines = todaysRoutines(store.routines);
   const focus = getFocusTracks(store);
   const importantTasks = getImportantTasks(store, 3);
-  const todaysWorkout = resolveTodaysWorkout(store.todaysWorkout, store.workouts, today);
+  const todaysProgram = resolveTodaysProgram(store.todaysProgram, store.programs, today);
 
   const [ideaFor, setIdeaFor] = useState<string | null>(null);
 
@@ -42,8 +42,8 @@ export function TodayScreen() {
           <div className="pills">
             <span className="pill">{focus.length} fokusspor</span>
             <span className="pill">{importantTasks.length} vigtige opgaver</span>
-            {todaysWorkout && (
-              <span className="pill">{todaysWorkout.estimatedMinutes} min. træning</span>
+            {todaysProgram && (
+              <span className="pill">{estimateMinutes(todaysProgram)} min. træning</span>
             )}
           </div>
         </section>
@@ -169,19 +169,19 @@ export function TodayScreen() {
               Bibliotek
             </Link>
           </div>
-          {todaysWorkout ? (
+          {todaysProgram ? (
             <div className="card">
               <div className="row">
                 <div className="workart" aria-hidden="true">
                   🏋️
                 </div>
                 <div className="grow">
-                  <h3>{todaysWorkout.name}</h3>
-                  <div className="meta">{workoutSummary(todaysWorkout)}</div>
+                  <h3>{todaysProgram.title}</h3>
+                  <div className="meta">{programSummary(todaysProgram)}</div>
                 </div>
               </div>
               <div className="actions" style={{ marginTop: 12 }}>
-                <Link className="btn primary" to={`/workouts/${todaysWorkout.id}/play`}>
+                <Link className="btn primary" to={`/workouts/programs/${todaysProgram.id}/play`}>
                   Start træning
                 </Link>
                 <Link className="btn" to="/workouts">

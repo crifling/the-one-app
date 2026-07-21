@@ -1,0 +1,683 @@
+<style>
+  :root {
+    --bg: #f3f0e8;
+    --card: #fffdf8;
+    --text: #171816;
+    --muted: #6f706a;
+    --line: #ddd7cc;
+    --accent: #2d5a4a;
+    --accent-strong: #234a3c;
+    --soft: #dce8e1;
+    --warm: #eadfcf;
+    --blue: #dfe7ee;
+    --gold: #eee5c9;
+    --pink: #ecdfe4;
+    --shadow: 0 11px 30px rgba(42, 38, 31, 0.08);
+    --tap: 44px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
+      system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  .stage {
+    min-height: 100vh;
+    margin: 0;
+    background: radial-gradient(120% 80% at 50% -10%, #e7e3d8 0%, #d7d4ce 55%, #cdc9c1 100%);
+    font-family: var(--font);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 28px 14px 60px;
+    line-height: 1.4;
+  }
+
+  .intro { max-width: 430px; text-align: center; color: #4a4740; }
+  .intro h1 { font-size: 22px; letter-spacing: -0.03em; margin: 0 0 6px; }
+  .intro p { font-size: 13.5px; margin: 0; color: #5f5c54; }
+  .intro .hint { margin-top: 10px; font-size: 12px; font-weight: 700; color: var(--accent); }
+
+  /* Phone frame ---------------------------------------------------------- */
+  .phone {
+    width: 100%; max-width: 390px; height: 800px; background: var(--bg);
+    border-radius: 44px;
+    box-shadow: 0 2px 0 2px #12110f inset, 0 0 0 12px #1c1b18, 0 30px 60px rgba(20, 18, 14, 0.42);
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .notch {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 118px; height: 30px; background: #1c1b18; border-radius: 0 0 18px 18px; z-index: 60;
+  }
+  .statusbar {
+    height: 52px; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 26px 6px; font-size: 13px; font-weight: 700; flex: 0 0 auto;
+  }
+  .screen { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  .screen::-webkit-scrollbar { width: 0; }
+  .pad { padding: 4px 16px 24px; }
+
+  .topbar { padding: 6px 16px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 800; }
+  h2.title { font-size: 27px; letter-spacing: -0.04em; margin: 3px 0 0; }
+  .backbtn {
+    border: 1px solid var(--line); background: var(--card); width: var(--tap); height: var(--tap);
+    border-radius: 14px; font-size: 20px; color: var(--text); box-shadow: var(--shadow); flex: 0 0 auto;
+  }
+  .txtbtn {
+    border: 0; background: none; color: var(--accent); font-weight: 800; font-size: 15px;
+    font-family: var(--font); padding: 10px 4px; min-height: var(--tap);
+  }
+
+  .segmented { display: flex; background: #e6e1d6; border-radius: 14px; padding: 4px; margin: 0 16px 14px; gap: 4px; }
+  .segmented button {
+    flex: 1; border: 0; background: transparent; padding: 9px 4px; border-radius: 10px;
+    font-size: 13px; font-weight: 800; color: var(--muted); font-family: var(--font);
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .segmented button.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 6px rgba(42, 38, 31, 0.12); }
+
+  .card {
+    background: var(--card); border: 1px solid rgba(221, 215, 204, 0.8); border-radius: 20px;
+    padding: 15px; margin-bottom: 11px; box-shadow: var(--shadow);
+  }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .grow { flex: 1; min-width: 0; }
+  h3 { font-size: 16.5px; margin: 0; letter-spacing: -0.01em; }
+  .meta { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .chev { font-size: 22px; color: #a7a49b; }
+
+  .thumb { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; font-size: 25px; flex: 0 0 auto; background: linear-gradient(145deg, #dbe9e2, #bcd2c7); }
+  .thumb.mob { background: linear-gradient(145deg, #e7e0f0, #d6cbe8); }
+  .thumb.bw { background: linear-gradient(145deg, #dfe7ee, #c3d4e4); }
+  .thumb.sp { background: linear-gradient(145deg, #dbe9e2, #bcd2c7); }
+
+  .tag { border-radius: 999px; padding: 4px 9px; font-size: 10.5px; font-weight: 800; white-space: nowrap; display: inline-block; }
+  .tag.sp { background: var(--soft); color: var(--accent); }
+  .tag.bw { background: var(--blue); color: #445f74; }
+  .tag.mob { background: #e7e0f0; color: #5b4a78; }
+  .tag.part { background: var(--warm); color: #6c4f31; }
+  .tag.muted { background: #ece8df; color: var(--muted); }
+
+  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 800; margin: 16px 2px 8px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border-radius: 14px; padding: 12px 14px; min-height: var(--tap); font-size: 14px;
+    font-weight: 800; border: 1px solid var(--line); background: var(--card);
+    color: var(--text); font-family: var(--font); width: 100%;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:active { background: var(--accent-strong); }
+  .btn.ghost { background: transparent; border-style: dashed; color: var(--accent); }
+  .btn.sm { width: auto; padding: 9px 12px; min-height: 0; font-size: 12.5px; border-radius: 11px; }
+  .addrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 4px 0 6px; }
+
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chips.scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; }
+  .chips.scroll::-webkit-scrollbar { height: 0; }
+  .chip { border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 8px 12px; font-size: 12.5px; font-weight: 700; white-space: nowrap; font-family: var(--font); }
+  .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .chip.part.active { background: #6c4f31; border-color: #6c4f31; }
+
+  /* Step cards ----------------------------------------------------------- */
+  .step {
+    background: var(--card); border: 1px solid rgba(221, 215, 204, 0.85); border-radius: 18px;
+    padding: 13px; margin-bottom: 10px; box-shadow: var(--shadow); position: relative;
+  }
+  .step.exercise { border-left: 5px solid var(--accent); }
+  .step.pause { border-left: 5px solid #c9a24a; background: linear-gradient(145deg, #fffdf8, #fbf4e4); }
+  .step .head { display: flex; align-items: flex-start; gap: 10px; }
+  .step .idx { width: 24px; height: 24px; border-radius: 8px; background: #ebe6dc; color: var(--muted); font-size: 12px; font-weight: 800; display: grid; place-items: center; flex: 0 0 auto; margin-top: 1px; }
+  .step.pause .idx { background: #f0e2c2; color: #7a5f22; }
+
+  .viewline { font-size: 13.5px; color: #514f48; font-weight: 600; margin-top: 9px; font-variant-numeric: tabular-nums; }
+  .viewline b { color: var(--text); }
+
+  .seg-mini { display: inline-flex; background: #ece7dd; border-radius: 10px; padding: 3px; margin-top: 11px; }
+  .seg-mini button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 800; color: var(--muted); font-family: var(--font); }
+  .seg-mini button.active { background: var(--card); color: var(--accent); box-shadow: 0 1px 4px rgba(42,38,31,0.12); }
+
+  .stepper-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 11px; }
+  .stepper { background: #f6f2ea; border: 1px solid var(--line); border-radius: 12px; padding: 6px 5px; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+  .stepper .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 800; padding-left: 2px; }
+  .stepper .row { justify-content: space-between; gap: 4px; }
+  .stepper .val { font-size: 17px; font-weight: 800; min-width: 34px; text-align: center; font-variant-numeric: tabular-nums; flex: 1; }
+  .rnd { width: 34px; height: 32px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); font-size: 18px; font-weight: 800; color: var(--accent); display: grid; place-items: center; font-family: var(--font); line-height: 1; flex: 0 0 auto; }
+  .rnd:active { background: var(--soft); }
+
+  .restrow { margin-top: 11px; }
+  .restrow .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 800; margin-bottom: 6px; display: block; }
+  .presets { display: flex; gap: 6px; }
+  .preset { flex: 1; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 2px; font-size: 12.5px; font-weight: 800; color: var(--muted); font-family: var(--font); font-variant-numeric: tabular-nums; }
+  .preset.active { background: var(--soft); color: var(--accent); border-color: #bcd3c8; }
+
+  .stepacts { display: flex; gap: 4px; margin-left: auto; }
+  .miniact { border: 0; background: transparent; color: #a29e94; font-size: 16px; width: 34px; height: 34px; border-radius: 9px; font-family: var(--font); }
+  .miniact:active { background: #efeae0; }
+  .miniact.del:active { background: #f7ecec; color: #8a3b3b; }
+
+  .estimate { display: flex; align-items: center; justify-content: space-between; background: #ebe6dc; border-radius: 14px; padding: 12px 14px; font-size: 13px; font-weight: 700; color: #4a4740; margin: 4px 0 14px; }
+  .estimate b { color: var(--text); }
+
+  .titlefield { width: 100%; border: 1px solid var(--line); border-radius: 13px; padding: 12px 13px; font-size: 18px; font-weight: 800; background: var(--card); font-family: var(--font); color: var(--text); margin-bottom: 12px; letter-spacing: -0.02em; }
+
+  .nav { flex: 0 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); background: rgba(255, 253, 248, 0.97); backdrop-filter: blur(20px); border-top: 1px solid var(--line); padding: 7px 5px 16px; }
+  .navitem { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #9a988f; font-size: 10px; font-weight: 700; border: 0; background: none; font-family: var(--font); padding: 4px 0; }
+  .navitem .ic { font-size: 20px; line-height: 1; }
+  .navitem.active { color: var(--accent); }
+
+  /* Sheets --------------------------------------------------------------- */
+  .sheet-scrim { position: absolute; inset: 0; background: rgba(20, 18, 14, 0.35); z-index: 70; display: none; align-items: flex-end; }
+  .sheet-scrim.open { display: flex; }
+  .sheet { background: var(--bg); width: 100%; max-height: 88%; border-radius: 26px 26px 0 0; padding: 8px 16px 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -12px 40px rgba(20, 18, 14, 0.25); animation: rise 0.22s ease; }
+  @keyframes rise { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+  .grabber { width: 40px; height: 5px; border-radius: 3px; background: #cbc6bb; margin: 6px auto 12px; }
+  .sheet-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .sheet h3.sheet-title { font-size: 19px; letter-spacing: -0.02em; margin: 0; }
+  .sheet-sub { font-size: 12.5px; color: var(--muted); font-weight: 700; }
+  .sheet-scroll { overflow-y: auto; flex: 1; }
+  .sheet-scroll::-webkit-scrollbar { width: 0; }
+
+  .search { width: 100%; border: 1px solid var(--line); border-radius: 13px; padding: 11px 13px; font-size: 15px; background: var(--card); font-family: var(--font); color: var(--text); margin-bottom: 10px; }
+
+  .pick { display: flex; align-items: center; gap: 11px; background: var(--card); border: 1px solid rgba(221,215,204,0.8); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
+  .pick.inprog { border-color: #bcd3c8; background: #f2f8f4; }
+  .pick .countbadge { min-width: 26px; height: 26px; padding: 0 7px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 800; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .qty { display: flex; align-items: center; gap: 6px; margin-left: auto; flex: 0 0 auto; }
+  .qty .n { min-width: 20px; text-align: center; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .addbtn { border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 11px; padding: 8px 12px; font-size: 12.5px; font-weight: 800; font-family: var(--font); margin-left: auto; }
+
+  .field { margin-bottom: 14px; }
+  .field > .flabel { display: block; font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field input { width: 100%; border: 1px solid var(--line); border-radius: 13px; padding: 12px 13px; font-size: 16px; background: var(--card); font-family: var(--font); color: var(--text); }
+
+  /* Player --------------------------------------------------------------- */
+  .player-scrim { position: absolute; inset: 0; background: var(--bg); z-index: 80; display: none; flex-direction: column; }
+  .player-scrim.open { display: flex; }
+  .player-top { display: flex; align-items: center; justify-content: space-between; padding: 54px 18px 8px; }
+  .player-body { flex: 1; display: flex; flex-direction: column; padding: 6px 20px 24px; }
+  .pcounter { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 800; text-align: center; }
+  .pvisual { height: 156px; border-radius: 26px; display: grid; place-items: center; font-size: 62px; margin: 14px 0; box-shadow: var(--shadow); background: linear-gradient(145deg, #e2ece7, #c8d9d0); }
+  .pvisual.rest { background: linear-gradient(145deg, #f6ecd4, #ecdcae); }
+  .pname { font-size: 28px; letter-spacing: -0.03em; text-align: center; margin: 2px 0 4px; text-wrap: balance; }
+  .pdose { text-align: center; color: var(--muted); font-size: 15px; font-weight: 600; }
+  .setdots { display: flex; gap: 8px; justify-content: center; margin: 16px 0 6px; }
+  .setdot { width: 13px; height: 13px; border-radius: 50%; background: #ddd7cc; }
+  .setdot.done { background: var(--accent); }
+  .setdot.current { background: var(--accent); box-shadow: 0 0 0 4px rgba(45,90,74,0.18); }
+  .bigtimer { font-size: 58px; font-weight: 850; letter-spacing: -0.04em; text-align: center; margin: 8px 0; font-variant-numeric: tabular-nums; }
+  .player-actions { margin-top: auto; display: grid; gap: 9px; }
+  .player-actions.two { grid-template-columns: 1fr 1.5fr; }
+
+  .toast { position: absolute; left: 50%; transform: translateX(-50%); bottom: 96px; background: var(--accent-strong); color: #fff; padding: 11px 16px; border-radius: 13px; font-size: 13px; font-weight: 700; box-shadow: var(--shadow); z-index: 90; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; white-space: nowrap; max-width: 90%; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+  .empty { text-align: center; color: var(--muted); font-size: 13.5px; padding: 26px 16px; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+</style>
+
+<div class="stage">
+  <div class="intro">
+    <h1>Træning · redesign-mockup v2</h1>
+    <p>Programmer åbner i <b>visning</b> — tryk <b>Rediger</b> for at ændre, <b>Gem</b> for at opdatere. Tilføj øvelser med tydelig optælling (− antal +), vælg <b>Reps/Tid</b>, og sæt <b>vægt</b> på Speediance. Intet gemmes — det er en skitse.</p>
+    <div class="hint">↓ Åbn “Ben + core”, tryk Rediger — eller lav et nyt, tomt program</div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+
+    <!-- LIBRARY -->
+    <div id="app" style="display:flex;flex-direction:column;height:100%;">
+      <div class="statusbar"><span>9:41</span><span>􀙇 100%</span></div>
+      <div class="screen">
+        <div class="topbar">
+          <div><div class="eyebrow" id="tb-eyebrow">Bibliotek</div><h2 class="title">Træning</h2></div>
+        </div>
+        <div class="segmented" id="tabs">
+          <button data-tab="programs" class="active">Programmer</button>
+          <button data-tab="exercises">Øvelser</button>
+          <button data-tab="history">Historik</button>
+        </div>
+        <div class="pad">
+          <div id="tab-programs"></div>
+          <div id="tab-exercises" style="display:none;"></div>
+          <div id="tab-history" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="nav">
+        <button class="navitem"><span class="ic">⌂</span><span>I dag</span></button>
+        <button class="navitem"><span class="ic">✓</span><span>Opgaver</span></button>
+        <button class="navitem active"><span class="ic">◫</span><span>Træning</span></button>
+        <button class="navitem"><span class="ic">↻</span><span>Rutiner</span></button>
+        <button class="navitem"><span class="ic">◎</span><span>Spor</span></button>
+      </div>
+    </div>
+
+    <!-- BUILDER (view + edit) -->
+    <div id="builder" style="display:none;flex-direction:column;height:100%;">
+      <div class="statusbar"><span>9:41</span><span>􀙇 100%</span></div>
+      <div class="screen">
+        <div class="topbar">
+          <button class="backbtn" id="builder-back" aria-label="Tilbage">‹</button>
+          <div class="grow"><div class="eyebrow" id="builder-eyebrow">Program</div></div>
+          <button class="txtbtn" id="builder-action">Rediger</button>
+          <button class="txtbtn" id="builder-cancel" style="display:none;color:var(--muted);">Annullér</button>
+        </div>
+        <div class="pad" id="builder-body"></div>
+      </div>
+    </div>
+
+    <!-- PICKER -->
+    <div class="sheet-scrim" id="picker">
+      <div class="sheet">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <h3 class="sheet-title">Tilføj øvelser</h3>
+          <span class="sheet-sub" id="picker-sub">0 i programmet</span>
+        </div>
+        <input class="search" id="picker-search" placeholder="Søg øvelse…" />
+        <div class="chips scroll" id="picker-chips"></div>
+        <div class="sheet-scroll" id="picker-list"></div>
+        <button class="btn primary" id="picker-done" style="margin-top:10px;">Færdig</button>
+      </div>
+    </div>
+
+    <!-- NEW EXERCISE -->
+    <div class="sheet-scrim" id="newex">
+      <div class="sheet">
+        <div class="grabber"></div>
+        <div class="sheet-head"><h3 class="sheet-title">Ny øvelse</h3></div>
+        <div class="sheet-scroll">
+          <div class="field"><span class="flabel">Titel</span><input id="nx-title" placeholder="F.eks. Bulgarian split squat" /></div>
+          <div class="field"><span class="flabel">Kategori</span>
+            <div class="segmented" style="margin:0;" id="nx-cat">
+              <button data-v="bw" class="active">Kropsvægt</button>
+              <button data-v="mob">Mobilitet</button>
+              <button data-v="sp">Speediance</button>
+            </div>
+            <div class="meta" id="nx-cat-note" style="margin-top:8px;"></div>
+          </div>
+          <div class="field"><span class="flabel">Kropsdel</span><div class="chips" id="nx-part"></div></div>
+        </div>
+        <div class="addrow" style="margin-top:6px;">
+          <button class="btn primary" id="nx-save">Gem øvelse</button>
+          <button class="btn sm" id="nx-cancel" style="width:auto;">Annullér</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAYER -->
+    <div class="player-scrim" id="player">
+      <div class="player-top">
+        <button class="backbtn" id="player-close" aria-label="Afslut">✕</button>
+        <div class="eyebrow" id="player-prog">Ben + core</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div class="player-body" id="player-body"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="intro" style="max-width:390px;">
+    <p style="font-size:12px;color:#6c6960;">Modellen: øvelser er genbrugelige (kategori · kropsdel). Et program er en liste af trin — øvelse eller pause. Reps/Tid og vægt sættes <b>pr. øvelse i programmet</b>, så samme øvelse kan bruges forskelligt. Vægt vises kun for vægt-kategorier (Speediance nu; vægte/maskiner senere).</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  const PARTS = ['Ben', 'Core', 'Ryg', 'Bryst', 'Skuldre', 'Arme', 'Balder', 'Helkrop', 'Kondition'];
+  const CAT = { bw: 'Kropsvægt', mob: 'Mobilitet', sp: 'Speediance' };
+  const CAT_EMOJI = { bw: '💪', mob: '🧘', sp: '🏋️' };
+  const CAT_DEFAULT_MODE = { bw: 'reps', mob: 'time', sp: 'reps' };
+  const WEIGHT_CATS = new Set(['sp']); // categories that support weight (kg); extend later
+  const REST_PRESETS = [30, 45, 60, 90];
+
+  let uid = 100; const nid = () => 'x' + ++uid;
+  const $ = (s) => document.querySelector(s);
+  const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  let exercises = [
+    { id: 'e1', title: 'Reverse lunges', cat: 'sp', part: 'Ben' },
+    { id: 'e2', title: 'Romanian deadlift', cat: 'sp', part: 'Ben' },
+    { id: 'e3', title: 'Woodchops', cat: 'sp', part: 'Core' },
+    { id: 'e4', title: 'Squats', cat: 'bw', part: 'Ben' },
+    { id: 'e5', title: 'Push-ups', cat: 'bw', part: 'Bryst' },
+    { id: 'e6', title: 'Plank', cat: 'bw', part: 'Core' },
+    { id: 'e7', title: 'Cat-cow', cat: 'mob', part: 'Ryg' },
+    { id: 'e8', title: 'World’s greatest stretch', cat: 'mob', part: 'Helkrop' },
+    { id: 'e9', title: 'Glute bridge', cat: 'bw', part: 'Balder' },
+  ];
+  const exById = (id) => exercises.find((e) => e.id === id);
+
+  // step.exercise: {id,kind:'exercise',exId,sets,mode:'reps'|'time',amount,rest,weight}
+  const mkStep = (exId, over) => {
+    const e = exById(exId); const mode = CAT_DEFAULT_MODE[e.cat] || 'reps';
+    return Object.assign({ id: nid(), kind: 'exercise', exId, sets: 3, mode, amount: mode === 'time' ? 40 : 10, rest: 60, weight: 0 }, over || {});
+  };
+
+  let programs = [
+    { id: 'p1', title: 'Ben + core', steps: [
+      mkStep('e1', { rest: 60, weight: 20 }), mkStep('e2', { rest: 75, weight: 40 }),
+      { id: nid(), kind: 'pause', sec: 90 }, mkStep('e3', { amount: 12, rest: 45, weight: 15 }),
+    ]},
+    { id: 'p2', title: '20 min. Full Body', steps: [
+      mkStep('e4', { rest: 45 }), mkStep('e5', { amount: 10, rest: 45 }), mkStep('e6', { mode: 'time', amount: 40, rest: 30 }),
+    ]},
+    { id: 'p3', title: 'Morgenmobilitet', steps: [ mkStep('e7', { mode: 'time', amount: 60, rest: 0 }), mkStep('e8', { mode: 'time', amount: 90, rest: 0 }) ]},
+  ];
+  const history = [ { title: 'Ben + core', when: 'I går', done: '3/3 øvelser' }, { title: '20 min. Full Body', when: '19. juli', done: '6/6 øvelser' } ];
+
+  let toastTimer;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1500); }
+
+  const progIcon = (p) => { const ex = p.steps.find((s) => s.kind === 'exercise'); return ex ? (exById(ex.exId) || {}).cat || 'sp' : 'sp'; };
+
+  // ---- Tabs ----
+  const EYEBROWS = { programs: 'Bibliotek', exercises: 'Bibliotek', history: 'Log' };
+  $('#tabs').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b) return; const tab = b.dataset.tab;
+    $('#tabs').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+    ['programs', 'exercises', 'history'].forEach((t) => { $('#tab-' + t).style.display = t === tab ? '' : 'none'; });
+    $('#tb-eyebrow').textContent = EYEBROWS[tab];
+  });
+
+  function renderPrograms() {
+    const wrap = $('#tab-programs'); wrap.innerHTML = '';
+    programs.forEach((p) => {
+      const cat = progIcon(p); const nEx = p.steps.filter((s) => s.kind === 'exercise').length;
+      const c = el('button', 'card row'); c.style.width = '100%'; c.style.textAlign = 'left'; c.style.fontFamily = 'var(--font)';
+      c.appendChild(el('div', 'thumb ' + cat, CAT_EMOJI[cat]));
+      c.appendChild(el('div', 'grow', `<h3>${p.title}</h3><div class="meta">${nEx} ${nEx === 1 ? 'øvelse' : 'øvelser'} · ${CAT[cat]}</div>`));
+      c.appendChild(el('span', 'chev', '›'));
+      c.addEventListener('click', () => openProgram(p, false));
+      wrap.appendChild(c);
+    });
+    const add = el('button', 'btn ghost', '+ Nyt program'); add.style.marginTop = '4px';
+    add.addEventListener('click', newProgram); wrap.appendChild(add);
+  }
+
+  let exFilter = { cat: 'all', part: 'all' };
+  function renderExercises() {
+    const wrap = $('#tab-exercises'); wrap.innerHTML = '';
+    const addBtn = el('button', 'btn primary', '+ Ny øvelse'); addBtn.style.marginBottom = '12px';
+    addBtn.addEventListener('click', openNewExercise); wrap.appendChild(addBtn);
+    const catChips = el('div', 'chips scroll');
+    [['all', 'Alle'], ['bw', 'Kropsvægt'], ['mob', 'Mobilitet'], ['sp', 'Speediance']].forEach(([v, l]) => {
+      const ch = el('button', 'chip' + (exFilter.cat === v ? ' active' : ''), l);
+      ch.addEventListener('click', () => { exFilter.cat = v; renderExercises(); }); catChips.appendChild(ch);
+    });
+    wrap.appendChild(catChips);
+    const partChips = el('div', 'chips scroll');
+    [['all', 'Alle kropsdele']].concat(PARTS.map((p) => [p, p])).forEach(([v, l]) => {
+      const ch = el('button', 'chip part' + (exFilter.part === v ? ' active' : ''), l);
+      ch.addEventListener('click', () => { exFilter.part = v; renderExercises(); }); partChips.appendChild(ch);
+    });
+    wrap.appendChild(partChips);
+    const list = exercises.filter((e) => (exFilter.cat === 'all' || e.cat === exFilter.cat) && (exFilter.part === 'all' || e.part === exFilter.part));
+    if (!list.length) { wrap.appendChild(el('div', 'empty', 'Ingen øvelser matcher filteret.')); return; }
+    list.forEach((e) => {
+      const c = el('div', 'card row'); c.appendChild(el('div', 'thumb ' + e.cat, CAT_EMOJI[e.cat]));
+      const w = WEIGHT_CATS.has(e.cat) ? ' <span class="tag muted">vægt</span>' : '';
+      c.appendChild(el('div', 'grow', `<h3>${e.title}</h3><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><span class="tag ${e.cat}">${CAT[e.cat]}</span><span class="tag part">${e.part}</span>${w}</div>`));
+      wrap.appendChild(c);
+    });
+  }
+
+  function renderHistory() {
+    const wrap = $('#tab-history'); wrap.innerHTML = '';
+    if (!history.length) { wrap.appendChild(el('div', 'empty', 'Ingen gennemførte træninger endnu.')); return; }
+    history.forEach((h) => { const c = el('div', 'card row'); c.appendChild(el('div', 'grow', `<h3>${h.title}</h3><div class="meta">${h.when} · ${h.done}</div>`)); c.appendChild(el('span', 'tag sp', 'Fuldført')); wrap.appendChild(c); });
+  }
+
+  // ---- Builder: view + edit --------------------------------------------
+  let current = null;   // the real program (in list)
+  let draft = null;     // editable copy while editing
+  let editing = false;
+  let isNew = false;
+
+  function openProgram(p, edit) {
+    current = p; isNew = false; editing = !!edit; draft = editing ? clone(p) : null;
+    $('#app').style.display = 'none'; $('#builder').style.display = 'flex';
+    renderBuilder();
+  }
+  function newProgram() {
+    current = { id: nid(), title: '', steps: [] }; isNew = true; editing = true; draft = clone(current);
+    $('#app').style.display = 'none'; $('#builder').style.display = 'flex';
+    renderBuilder(); setTimeout(() => { const f = $('#draft-title'); if (f) f.focus(); }, 60);
+  }
+  function leaveBuilder() { $('#builder').style.display = 'none'; $('#app').style.display = 'flex'; renderPrograms(); }
+
+  $('#builder-back').addEventListener('click', () => {
+    if (editing && !isNew) { editing = false; draft = null; renderBuilder(); }
+    else leaveBuilder();
+  });
+  $('#builder-action').addEventListener('click', () => {
+    if (!editing) { editing = true; draft = clone(current); renderBuilder(); }
+    else { // Gem
+      if (!draft.title.trim()) { toast('Giv programmet et navn'); const f = $('#draft-title'); if (f) f.focus(); return; }
+      current.title = draft.title.trim(); current.steps = draft.steps;
+      if (isNew) { programs.push(current); isNew = false; }
+      editing = false; draft = null; renderBuilder(); toast('Program gemt');
+    }
+  });
+  $('#builder-cancel').addEventListener('click', () => {
+    if (isNew) { leaveBuilder(); } else { editing = false; draft = null; renderBuilder(); }
+  });
+
+  function doseText(s) {
+    const e = exById(s.exId) || {}; const amt = s.mode === 'time' ? (s.amount + ' sek.') : (s.amount + ' reps');
+    let t = `<b>${s.sets}</b> sæt × ${amt}`;
+    if (WEIGHT_CATS.has(e.cat) && s.weight > 0) t += ` · <b>${s.weight} kg</b>`;
+    if (s.rest > 0) t += ` · ${s.rest}s pause`;
+    return t;
+  }
+
+  function estimate(steps) {
+    let sec = 0, count = 0;
+    steps.forEach((s) => { if (s.kind === 'pause') { sec += s.sec; return; } count++; const work = s.mode === 'time' ? s.amount : s.amount * 3.5; sec += s.sets * work + s.sets * s.rest; });
+    return { min: Math.max(1, Math.round(sec / 60)), count };
+  }
+
+  function renderBuilder() {
+    $('#builder-eyebrow').textContent = isNew ? 'Nyt program' : 'Program';
+    $('#builder-action').textContent = editing ? 'Gem' : 'Rediger';
+    $('#builder-action').style.color = editing ? 'var(--accent)' : 'var(--accent)';
+    $('#builder-cancel').style.display = editing ? '' : 'none';
+    const body = $('#builder-body'); body.innerHTML = '';
+    const model = editing ? draft : current;
+
+    if (editing) {
+      const tf = el('input', 'titlefield'); tf.id = 'draft-title'; tf.value = model.title; tf.placeholder = 'Programnavn';
+      tf.addEventListener('input', (e) => { draft.title = e.target.value; });
+      body.appendChild(tf);
+    } else {
+      body.appendChild(el('h2', 'title', model.title || 'Uden navn'));
+      body.appendChild(el('div', 'meta', '')).style.marginBottom = '6px';
+    }
+
+    const est = estimate(model.steps);
+    const estBox = el('div', 'estimate', `<span>Anslået varighed</span><span><b>~${est.min} min</b> · ${est.count} ${est.count === 1 ? 'øvelse' : 'øvelser'}</span>`);
+    body.appendChild(estBox);
+
+    const stepsWrap = el('div'); body.appendChild(stepsWrap);
+    model.steps.forEach((s, i) => stepsWrap.appendChild(s.kind === 'pause' ? pauseCard(s, i) : (editing ? editCard(s, i) : viewCard(s, i))));
+    if (!model.steps.length) stepsWrap.appendChild(el('div', 'empty', editing ? 'Tomt program. Tryk “Tilføj øvelse”.' : 'Ingen øvelser endnu.'));
+
+    if (editing) {
+      const addrow = el('div', 'addrow');
+      const addEx = el('button', 'btn ghost', '+ Tilføj øvelse'); addEx.id = 'add-exercise'; addEx.addEventListener('click', openPicker);
+      const addPause = el('button', 'btn ghost sm', '+ Pause'); addPause.id = 'add-pause'; addPause.style.width = 'auto';
+      addPause.addEventListener('click', () => { draft.steps.push({ id: nid(), kind: 'pause', sec: 60 }); renderBuilder(); });
+      addrow.appendChild(addEx); addrow.appendChild(addPause); body.appendChild(addrow);
+    } else {
+      const start = el('button', 'btn primary', '▶  Start program'); start.style.marginTop = '8px';
+      start.addEventListener('click', () => openPlayer(current)); body.appendChild(start);
+    }
+  }
+
+  function tags(e) { const w = WEIGHT_CATS.has(e.cat) ? '' : ''; return `<div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;"><span class="tag ${e.cat}">${CAT[e.cat]}</span><span class="tag part">${e.part}</span>${w}</div>`; }
+
+  function viewCard(s, i) {
+    const e = exById(s.exId) || { title: '—', cat: 'bw', part: '' };
+    const card = el('div', 'step exercise'); const head = el('div', 'head');
+    head.appendChild(el('div', 'idx', i + 1));
+    head.appendChild(el('div', 'grow', `<h3>${e.title}</h3>${tags(e)}`));
+    card.appendChild(head);
+    card.appendChild(el('div', 'viewline', doseText(s)));
+    return card;
+  }
+
+  function stepper(label, value, onMinus, onPlus) {
+    const s = el('div', 'stepper'); s.appendChild(el('span', 'lbl', label));
+    const minus = el('button', 'rnd', '−'); const val = el('span', 'val', value); const plus = el('button', 'rnd', '+');
+    minus.addEventListener('click', onMinus); plus.addEventListener('click', onPlus);
+    const grp = el('div', 'row'); grp.style.gap = '4px'; grp.appendChild(minus); grp.appendChild(val); grp.appendChild(plus);
+    s.appendChild(grp); return s;
+  }
+
+  function editCard(s, i) {
+    const e = exById(s.exId) || { title: '—', cat: 'bw', part: '' };
+    const card = el('div', 'step exercise'); const head = el('div', 'head');
+    head.appendChild(el('div', 'idx', i + 1));
+    head.appendChild(el('div', 'grow', `<h3>${e.title}</h3>${tags(e)}`));
+    const acts = el('div', 'stepacts');
+    const up = el('button', 'miniact', '↑'); up.addEventListener('click', () => move(i, -1));
+    const down = el('button', 'miniact', '↓'); down.addEventListener('click', () => move(i, 1));
+    const dup = el('button', 'miniact', '⧉'); dup.addEventListener('click', () => { draft.steps.splice(i + 1, 0, Object.assign(clone(s), { id: nid() })); renderBuilder(); toast('Øvelse duplikeret'); });
+    const del = el('button', 'miniact del', '🗑'); del.addEventListener('click', () => { draft.steps.splice(i, 1); renderBuilder(); });
+    acts.append(up, down, dup, del); head.appendChild(acts); card.appendChild(head);
+
+    // Reps | Tid toggle
+    const seg = el('div', 'seg-mini');
+    ['reps', 'time'].forEach((m) => { const b = el('button', s.mode === m ? 'active' : '', m === 'reps' ? 'Reps' : 'Tid'); b.addEventListener('click', () => { if (s.mode !== m) { s.mode = m; s.amount = m === 'time' ? 40 : 10; renderBuilder(); } }); seg.appendChild(b); });
+    card.appendChild(seg);
+
+    const grid = el('div', 'stepper-grid');
+    grid.appendChild(stepper('Sæt', s.sets, () => { s.sets = Math.max(1, s.sets - 1); renderBuilder(); }, () => { s.sets = Math.min(10, s.sets + 1); renderBuilder(); }));
+    if (s.mode === 'time') grid.appendChild(stepper('Tid (sek.)', s.amount, () => { s.amount = Math.max(5, s.amount - 5); renderBuilder(); }, () => { s.amount = Math.min(600, s.amount + 5); renderBuilder(); }));
+    else grid.appendChild(stepper('Reps', s.amount, () => { s.amount = Math.max(1, s.amount - 1); renderBuilder(); }, () => { s.amount = Math.min(50, s.amount + 1); renderBuilder(); }));
+
+    // Weight only for weight-capable categories
+    if (WEIGHT_CATS.has(e.cat)) {
+      grid.appendChild(stepper('Vægt (kg)', s.weight, () => { s.weight = Math.max(0, +(s.weight - 2.5).toFixed(1)); renderBuilder(); }, () => { s.weight = +(s.weight + 2.5).toFixed(1); renderBuilder(); }));
+    }
+    card.appendChild(grid);
+
+    const rr = el('div', 'restrow'); rr.appendChild(el('span', 'lbl', 'Pause mellem sæt'));
+    const presets = el('div', 'presets');
+    REST_PRESETS.forEach((p) => { const b = el('button', 'preset' + (s.rest === p ? ' active' : ''), p + 's'); b.addEventListener('click', () => { s.rest = p; renderBuilder(); }); presets.appendChild(b); });
+    rr.appendChild(presets); card.appendChild(rr);
+    return card;
+  }
+
+  function pauseCard(s, i) {
+    const card = el('div', 'step pause'); const head = el('div', 'head');
+    head.appendChild(el('div', 'idx', '⏸'));
+    head.appendChild(el('div', 'grow', `<h3>Pause</h3><div class="meta">Hvil før næste øvelse${editing ? '' : ' · ' + (s.sec >= 60 ? (s.sec / 60) + ' min' : s.sec + ' sek.')}</div>`));
+    if (editing) { const acts = el('div', 'stepacts'); const up = el('button', 'miniact', '↑'); up.addEventListener('click', () => move(i, -1)); const down = el('button', 'miniact', '↓'); down.addEventListener('click', () => move(i, 1)); const del = el('button', 'miniact del', '🗑'); del.addEventListener('click', () => { draft.steps.splice(i, 1); renderBuilder(); }); acts.append(up, down, del); head.appendChild(acts); }
+    card.appendChild(head);
+    if (editing) {
+      const rr = el('div', 'restrow'); rr.appendChild(el('span', 'lbl', 'Længde')); const presets = el('div', 'presets');
+      [30, 60, 90, 120].forEach((p) => { const b = el('button', 'preset' + (s.sec === p ? ' active' : ''), (p >= 60 ? (p / 60) + 'm' : p + 's')); b.addEventListener('click', () => { s.sec = p; renderBuilder(); }); presets.appendChild(b); });
+      rr.appendChild(presets); card.appendChild(rr);
+    }
+    return card;
+  }
+  function move(i, dir) { const j = i + dir; if (j < 0 || j >= draft.steps.length) return; const t = draft.steps[i]; draft.steps[i] = draft.steps[j]; draft.steps[j] = t; renderBuilder(); }
+
+  // ---- Picker (with counts) --------------------------------------------
+  let pickFilter = 'all';
+  function countOf(exId) { return draft.steps.filter((s) => s.kind === 'exercise' && s.exId === exId).length; }
+  function totalEx() { return draft.steps.filter((s) => s.kind === 'exercise').length; }
+  function openPicker() { pickFilter = 'all'; $('#picker-search').value = ''; renderPickerChips(); renderPickerList(''); $('#picker').classList.add('open'); }
+  function renderPickerChips() { const wrap = $('#picker-chips'); wrap.innerHTML = ''; [['all', 'Alle'], ['bw', 'Kropsvægt'], ['mob', 'Mobilitet'], ['sp', 'Speediance']].forEach(([v, l]) => { const ch = el('button', 'chip' + (pickFilter === v ? ' active' : ''), l); ch.addEventListener('click', () => { pickFilter = v; renderPickerChips(); renderPickerList($('#picker-search').value); }); wrap.appendChild(ch); }); }
+  function addInstance(exId) { draft.steps.push(mkStep(exId)); refreshPicker(); }
+  function removeInstance(exId) { for (let i = draft.steps.length - 1; i >= 0; i--) { if (draft.steps[i].kind === 'exercise' && draft.steps[i].exId === exId) { draft.steps.splice(i, 1); break; } } refreshPicker(); }
+  function refreshPicker() { renderPickerList($('#picker-search').value); $('#picker-sub').textContent = totalEx() + ' i programmet'; }
+  function renderPickerList(q) {
+    const wrap = $('#picker-list'); wrap.innerHTML = ''; const ql = (q || '').toLowerCase();
+    $('#picker-sub').textContent = totalEx() + ' i programmet';
+    const list = exercises.filter((e) => (pickFilter === 'all' || e.cat === pickFilter) && e.title.toLowerCase().includes(ql));
+    list.forEach((e) => {
+      const n = countOf(e.id); const row = el('div', 'pick' + (n > 0 ? ' inprog' : ''));
+      if (n > 0) row.appendChild(el('div', 'countbadge', '×' + n)); else row.appendChild(el('div', 'thumb ' + e.cat, CAT_EMOJI[e.cat]));
+      row.appendChild(el('div', 'grow', `<h3 style="font-size:15px;">${e.title}</h3><div class="meta">${CAT[e.cat]} · ${e.part}</div>`));
+      if (n > 0) {
+        const qty = el('div', 'qty');
+        const minus = el('button', 'rnd', '−'); minus.addEventListener('click', () => removeInstance(e.id));
+        const nn = el('span', 'n', n);
+        const plus = el('button', 'rnd', '+'); plus.addEventListener('click', () => addInstance(e.id));
+        qty.append(minus, nn, plus); row.appendChild(qty);
+      } else { const add = el('button', 'addbtn', '＋ Tilføj'); add.addEventListener('click', () => addInstance(e.id)); row.appendChild(add); }
+      wrap.appendChild(row);
+    });
+    if (!list.length) wrap.appendChild(el('div', 'empty', 'Ingen match. Opret evt. en ny øvelse.'));
+  }
+  $('#picker-search').addEventListener('input', (e) => renderPickerList(e.target.value));
+  $('#picker-done').addEventListener('click', () => { $('#picker').classList.remove('open'); renderBuilder(); });
+  $('#picker').addEventListener('click', (e) => { if (e.target.id === 'picker') { $('#picker').classList.remove('open'); renderBuilder(); } });
+
+  // ---- New exercise -----------------------------------------------------
+  let nxCat = 'bw', nxPart = 'Ben';
+  function catNote() { $('#nx-cat-note').textContent = WEIGHT_CATS.has(nxCat) ? 'Denne kategori understøtter vægt (kg) i programmer.' : 'Ingen vægt for denne kategori.'; }
+  function openNewExercise() { nxCat = 'bw'; nxPart = 'Ben'; $('#nx-title').value = ''; $('#nx-cat').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.v === 'bw')); renderNxParts(); catNote(); $('#newex').classList.add('open'); }
+  function renderNxParts() { const wrap = $('#nx-part'); wrap.innerHTML = ''; PARTS.forEach((p) => { const ch = el('button', 'chip part' + (nxPart === p ? ' active' : ''), p); ch.addEventListener('click', () => { nxPart = p; renderNxParts(); }); wrap.appendChild(ch); }); }
+  $('#nx-cat').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; nxCat = b.dataset.v; $('#nx-cat').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b)); catNote(); });
+  $('#nx-save').addEventListener('click', () => { const title = $('#nx-title').value.trim(); if (!title) { toast('Skriv en titel'); return; } exercises.unshift({ id: nid(), title, cat: nxCat, part: nxPart }); $('#newex').classList.remove('open'); exFilter = { cat: 'all', part: 'all' }; renderExercises(); toast('Øvelse oprettet'); });
+  $('#nx-cancel').addEventListener('click', () => $('#newex').classList.remove('open'));
+  $('#newex').addEventListener('click', (e) => { if (e.target.id === 'newex') $('#newex').classList.remove('open'); });
+
+  // ---- Player -----------------------------------------------------------
+  let pProg = null, pIndex = 0, pSet = 1, pTimer = null, pRemaining = 0, pResting = false;
+  function openPlayer(p) { if (!p.steps.length) { toast('Tilføj mindst én øvelse'); return; } pProg = p; pIndex = 0; pSet = 1; pResting = false; $('#player-prog').textContent = p.title; $('#player').classList.add('open'); renderPlayer(); }
+  function stopTimer() { if (pTimer) { clearInterval(pTimer); pTimer = null; } }
+  function fmt(s) { const m = Math.floor(s / 60), r = s % 60; return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0'); }
+  function buzz() { try { if (navigator.vibrate) navigator.vibrate(120); } catch (e) {} }
+  function exNumber(i) { let n = 0; for (let k = 0; k <= i; k++) if (pProg.steps[k].kind === 'exercise') n++; return n; }
+  function exTotal() { return pProg.steps.filter((s) => s.kind === 'exercise').length; }
+  function currentRest() { const s = pProg.steps[pIndex]; return s && s.kind === 'exercise' ? s.rest : 60; }
+
+  function renderPlayer() {
+    stopTimer(); const body = $('#player-body'); body.innerHTML = '';
+    if (pIndex >= pProg.steps.length) return finishPlayer();
+    const step = pProg.steps[pIndex];
+    if (step.kind === 'pause' || pResting) {
+      const total = pResting ? currentRest() : step.sec; pRemaining = total;
+      body.appendChild(el('div', 'pcounter', pResting ? 'Pause mellem sæt' : 'Pause'));
+      body.appendChild(el('div', 'pvisual rest', '⏱'));
+      body.appendChild(el('div', 'pname', pResting ? 'Hvil' : 'Pause'));
+      const timer = el('div', 'bigtimer', fmt(pRemaining)); body.appendChild(timer);
+      const acts = el('div', 'player-actions');
+      const add = el('button', 'btn', '+15 sek.'); add.addEventListener('click', () => { pRemaining += 15; timer.textContent = fmt(pRemaining); });
+      const skip = el('button', 'btn primary', 'Spring pause over'); skip.addEventListener('click', advanceAfterRest);
+      acts.append(add, skip); body.appendChild(acts);
+      pTimer = setInterval(() => { pRemaining--; timer.textContent = fmt(Math.max(0, pRemaining)); if (pRemaining <= 0) { buzz(); advanceAfterRest(); } }, 1000);
+      return;
+    }
+    const e = exById(step.exId) || { title: '—', cat: 'bw' };
+    body.appendChild(el('div', 'pcounter', 'Øvelse ' + exNumber(pIndex) + ' af ' + exTotal()));
+    body.appendChild(el('div', 'pvisual', CAT_EMOJI[e.cat]));
+    body.appendChild(el('div', 'pname', e.title));
+    let dose = step.mode === 'time' ? (step.amount + ' sek.') : (step.amount + ' reps');
+    if (WEIGHT_CATS.has(e.cat) && step.weight > 0) dose += ' · ' + step.weight + ' kg';
+    body.appendChild(el('div', 'pdose', 'Sæt ' + pSet + ' af ' + step.sets + ' · ' + dose));
+    const dots = el('div', 'setdots'); for (let k = 1; k <= step.sets; k++) dots.appendChild(el('div', 'setdot' + (k < pSet ? ' done' : (k === pSet ? ' current' : '')))); body.appendChild(dots);
+    const acts = el('div', 'player-actions two');
+    const prev = el('button', 'btn', (pSet > 1 || pIndex > 0) ? 'Forrige' : 'Afslut');
+    prev.addEventListener('click', () => { if (pSet > 1 || pIndex > 0) stepBack(); else finishPlayer(); });
+    const done = el('button', 'btn primary', pSet < step.sets ? 'Færdig sæt ✓' : 'Færdig øvelse ✓');
+    done.addEventListener('click', () => { if (pSet < step.sets) { pResting = true; renderPlayer(); } else { pSet = 1; pIndex++; renderPlayer(); } });
+    acts.append(prev, done); body.appendChild(acts);
+  }
+  function advanceAfterRest() { stopTimer(); if (pResting) { pResting = false; pSet++; renderPlayer(); } else { pIndex++; renderPlayer(); } }
+  function stepBack() { stopTimer(); pResting = false; if (pSet > 1) pSet--; else { pIndex = Math.max(0, pIndex - 1); const s = pProg.steps[pIndex]; pSet = s && s.kind === 'exercise' ? s.sets : 1; } renderPlayer(); }
+  function finishPlayer() { stopTimer(); const body = $('#player-body'); body.innerHTML = ''; body.appendChild(el('div', 'pvisual', '🎉')); body.appendChild(el('div', 'pname', 'Godt gået!')); body.appendChild(el('div', 'pdose', pProg.title + ' gennemført')); const acts = el('div', 'player-actions'); const close = el('button', 'btn primary', 'Færdig'); close.addEventListener('click', () => $('#player').classList.remove('open')); acts.appendChild(close); body.appendChild(acts); }
+  $('#player-close').addEventListener('click', () => { stopTimer(); $('#player').classList.remove('open'); });
+
+  renderPrograms(); renderExercises(); renderHistory();
+})();
+</script>

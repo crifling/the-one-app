@@ -77,10 +77,22 @@ appear on Today; completion resets each day.
 
 ### Workouts
 
-A simple but usable module: workout library; details; select/change today's
-workout; start; step through exercises; complete; basic history. A workout has
-exercises with sets, reps, duration and optional rest. No advanced statistics in
-v1.
+Organised as a **Træning** hub with three tabs: **Programmer**, **Øvelser**
+(exercise library) and **Historik**.
+
+- **Exercises** are reusable definitions: title, category (Kropsvægt / Mobilitet
+  / Speediance) and body part. Reps/sets/weight are not stored on the exercise —
+  they belong to how it's used in a program.
+- **Programs** are ordered lists of steps; a step is either an **exercise** (with
+  sets, reps *or* time, rest between sets, and — for weight-capable categories
+  like Speediance — a weight in kg) or a **pause**. The same exercise can appear
+  multiple times. Programs open **read-only** and switch to an edit mode with
+  Save/Cancel.
+- Pick/change today's program; start it; step through sets with a rest-timer
+  between sets and standalone pauses; complete; basic history.
+
+Deferred: supersets (the flat step list is designed to allow grouping later),
+per-set weights, and advanced statistics.
 
 ## Data & privacy
 

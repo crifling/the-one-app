@@ -60,7 +60,8 @@ describe('backup import validation', () => {
       expect(result.data.version).toBe(CURRENT_VERSION);
       // Missing collections are filled in with defaults.
       expect(Array.isArray(result.data.tracks)).toBe(true);
-      expect(Array.isArray(result.data.workouts)).toBe(true);
+      expect(Array.isArray(result.data.programs)).toBe(true);
+      expect(Array.isArray(result.data.exercises)).toBe(true);
     }
   });
 });
