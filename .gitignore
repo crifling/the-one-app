@@ -1,0 +1,22 @@
+# dependencies
+node_modules
+
+# build output
+dist
+dev-dist
+
+# test / coverage
+coverage
+
+# logs
+*.log
+npm-debug.log*
+
+# editor / os
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# TypeScript incremental build info
+*.tsbuildinfo
