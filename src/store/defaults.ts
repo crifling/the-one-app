@@ -2,7 +2,7 @@ import type { AppData } from './types';
 import { LIFE_AREAS } from '../data/lifeAreas';
 
 /** Current schema version of the persisted document. */
-export const CURRENT_VERSION = 1;
+export const CURRENT_VERSION = 2;
 
 /** An empty document at the current schema version (no seed data). */
 export function emptyAppData(): AppData {
@@ -13,9 +13,10 @@ export function emptyAppData(): AppData {
     tasks: [],
     routines: [],
     routineProgress: {},
-    workouts: [],
-    workoutHistory: [],
-    todaysWorkout: null,
+    exercises: [],
+    programs: [],
+    sessions: [],
+    todaysProgram: null,
     settings: { userName: 'Claus' },
     seeded: false,
   };

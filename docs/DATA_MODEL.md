@@ -14,9 +14,10 @@ describes the stored entities and the backup schema.
 | `tasks`           | `Task[]`                          | General standalone tasks only.                   |
 | `routines`        | `Routine[]`                       | Reusable checklists.                             |
 | `routineProgress` | `Record<routineId, RoutineProgress>` | Per-day completion, keyed by routine id.      |
-| `workouts`        | `Workout[]`                       | Workout library.                                 |
-| `workoutHistory`  | `WorkoutSession[]`                | Completed workouts (most recent first).          |
-| `todaysWorkout`   | `TodaysWorkout \| null`           | Selection, valid only for its `date`.            |
+| `exercises`       | `Exercise[]`                      | Reusable exercise library.                       |
+| `programs`        | `Program[]`                       | Reusable training programs (ordered steps).      |
+| `sessions`        | `WorkoutSession[]`                | Completed programs (most recent first).          |
+| `todaysProgram`   | `TodaysProgram \| null`           | Selection, valid only for its `date`.            |
 | `settings`        | `Settings`                        | e.g. `userName`.                                 |
 | `seeded`          | `boolean`                         | True once seed data has been installed.          |
 
@@ -66,20 +67,39 @@ createdAt, updatedAt
 `{ date: 'YYYY-MM-DD', completedStepIds: string[] }`. Progress applies to a
 single day; a new day resets completion (progress from other dates is ignored).
 
-### Workout / Exercise
+### Exercise (library)
+A reusable definition. Reps/sets/weight are **not** stored here — they belong to
+how the exercise is used in a program, so the same exercise can be 3×10 in one
+program and 5×5 in another.
 ```
-Workout:  id, name, category: 'speediance' | 'bodyweight' | 'mobility',
-          description: string | null, estimatedMinutes, exercises: Exercise[]
-Exercise: id, name, sets|null, reps|null, durationSeconds|null,
-          restSeconds|null, note|null
+id, title, category: 'speediance' | 'bodyweight' | 'mobility',
+bodyPart: BodyPartId, createdAt, updatedAt
 ```
+`BodyPartId` is a fixed set: `legs, core, back, chest, shoulders, arms, glutes,
+fullbody, cardio`.
+
+### Program + steps
+A program is an ordered, flat list of steps. A step is either an **exercise**
+(with its dosage) or a **pause**. Keeping it flat means groupings such as
+supersets can be layered on later without another migration.
+```
+Program:      id, title, steps: ProgramStep[], createdAt, updatedAt
+ProgramStep = ExerciseStep | PauseStep
+ExerciseStep: id, kind:'exercise', exerciseId, sets,
+              mode: 'reps' | 'time', amount (reps or seconds per set),
+              restSeconds (between sets), weightKg (0 = none)
+PauseStep:    id, kind:'pause', seconds
+```
+**Weight** (`weightKg`) is only meaningful for *weight-capable* categories —
+currently Speediance only (see `WEIGHT_CATEGORIES` in
+`features/workouts/logic.ts`); free weights / machines can be added there later.
 
 ### WorkoutSession (history)
-`id, workoutId, workoutName, completedAt (ISO datetime), exercisesCompleted,
+`id, programId, programName, completedAt (ISO datetime), exercisesCompleted,
 exercisesTotal`.
 
-### TodaysWorkout
-`{ workoutId, date: 'YYYY-MM-DD' }`. Resolved to a workout only when `date` is
+### TodaysProgram
+`{ programId, date: 'YYYY-MM-DD' }`. Resolved to a program only when `date` is
 today; otherwise treated as "nothing selected".
 
 ### Settings
@@ -122,9 +142,18 @@ data.
 - `src/persistence/migrations.ts` holds an ordered map of migrations
   `N → N+1`. `runMigrations(doc)` reads the document's `version` (missing/unknown
   ⇒ treated as **0**) and applies each step until it reaches `CURRENT_VERSION`.
+  Migrations are self-contained (they don't depend on the current default shape,
+  which changes over time) so an old document always upgrades deterministically.
 - Migration **0 → 1** establishes the baseline shape, filling any missing
-  collections with defaults and refreshing the built-in life areas while
-  preserving existing user data.
+  collections and refreshing the built-in life areas while preserving user data.
+- Migration **1 → 2** splits the reusable exercise library out of workouts and
+  turns each workout into a **program** of ordered steps. Old embedded exercises
+  are de-duplicated into library exercises by `(category + title)`; each becomes
+  an exercise step (mapping `durationSeconds → time`, else `reps`), `weightKg`
+  defaults to 0, and `bodyPart` defaults to `fullbody` (refinable later).
+  `todaysWorkout`/`workoutHistory` are carried over to `todaysProgram`/`sessions`
+  and the obsolete v1 fields are dropped. Covered by tests in
+  `migrations.test.ts`.
 
 ### Adding a future migration
 

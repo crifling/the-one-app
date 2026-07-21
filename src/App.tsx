@@ -12,8 +12,8 @@ import { TrackDetailScreen } from './features/tracks/TrackDetailScreen';
 import { RoutinesScreen } from './features/routines/RoutinesScreen';
 import { RoutineDetailScreen } from './features/routines/RoutineDetailScreen';
 import { WorkoutsScreen } from './features/workouts/WorkoutsScreen';
-import { WorkoutDetailScreen } from './features/workouts/WorkoutDetailScreen';
-import { WorkoutPlayerScreen } from './features/workouts/WorkoutPlayerScreen';
+import { ProgramDetailScreen } from './features/workouts/ProgramDetailScreen';
+import { ProgramPlayerScreen } from './features/workouts/ProgramPlayerScreen';
 import { SettingsScreen } from './features/settings/SettingsScreen';
 
 export function App() {
@@ -42,8 +42,8 @@ export function App() {
             <Route path="/routines" element={<RoutinesScreen />} />
             <Route path="/routines/:routineId" element={<RoutineDetailScreen />} />
             <Route path="/workouts" element={<WorkoutsScreen />} />
-            <Route path="/workouts/:workoutId" element={<WorkoutDetailScreen />} />
-            <Route path="/workouts/:workoutId/play" element={<WorkoutPlayerScreen />} />
+            <Route path="/workouts/programs/:programId" element={<ProgramDetailScreen />} />
+            <Route path="/workouts/programs/:programId/play" element={<ProgramPlayerScreen />} />
             <Route path="/settings" element={<SettingsScreen />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Routes>

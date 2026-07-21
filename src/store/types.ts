@@ -85,40 +85,90 @@ export interface RoutineProgress {
 
 export type WorkoutCategory = 'speediance' | 'bodyweight' | 'mobility';
 
+/** Fixed body-part ids an exercise can target. */
+export type BodyPartId =
+  | 'legs'
+  | 'core'
+  | 'back'
+  | 'chest'
+  | 'shoulders'
+  | 'arms'
+  | 'glutes'
+  | 'fullbody'
+  | 'cardio';
+
+export interface BodyPart {
+  id: BodyPartId;
+  name: string;
+}
+
+/**
+ * A reusable exercise definition in the library. Reps/sets/weight are NOT
+ * stored here — those belong to how the exercise is used inside a program, so
+ * the same exercise can be 3×10 in one program and 5×5 in another.
+ */
 export interface Exercise {
   id: string;
-  name: string;
-  sets: number | null;
-  reps: number | null;
-  /** Duration of a working set in seconds, when time-based. */
-  durationSeconds: number | null;
-  restSeconds: number | null;
-  note: string | null;
-}
-
-export interface Workout {
-  id: string;
-  name: string;
+  title: string;
   category: WorkoutCategory;
-  description: string | null;
-  estimatedMinutes: number;
-  exercises: Exercise[];
+  bodyPart: BodyPartId;
+  createdAt: string;
+  updatedAt: string;
 }
 
-/** A completed workout, for basic history. */
+/** How a program step's effort is measured. */
+export type StepMode = 'reps' | 'time';
+
+/**
+ * A single step inside a program. Either an exercise (with its dosage) or a
+ * standalone pause. Kept as a flat, ordered list so groupings such as
+ * supersets can be layered on later without another migration.
+ */
+export interface ExerciseStep {
+  id: string;
+  kind: 'exercise';
+  exerciseId: string;
+  sets: number;
+  mode: StepMode;
+  /** Reps per set when mode is 'reps', or seconds per set when 'time'. */
+  amount: number;
+  /** Rest between sets, in seconds. */
+  restSeconds: number;
+  /** Weight in kg; only meaningful for weight-capable categories. 0 = none. */
+  weightKg: number;
+}
+
+export interface PauseStep {
+  id: string;
+  kind: 'pause';
+  seconds: number;
+}
+
+export type ProgramStep = ExerciseStep | PauseStep;
+
+/** An ordered, reusable training plan built from library exercises. */
+export interface Program {
+  id: string;
+  title: string;
+  steps: ProgramStep[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A completed program, for basic history. */
 export interface WorkoutSession {
   id: string;
-  workoutId: string;
-  workoutName: string;
-  /** ISO datetime the workout was completed. */
+  programId: string;
+  programName: string;
+  /** ISO datetime the program was completed. */
   completedAt: string;
   exercisesCompleted: number;
   exercisesTotal: number;
 }
 
-/** Today's chosen workout, valid only for the given date. */
-export interface TodaysWorkout {
-  workoutId: string;
+/** Today's chosen program, valid only for the given date. */
+export interface TodaysProgram {
+  programId: string;
   /** ISO date (YYYY-MM-DD). */
   date: string;
 }
@@ -138,9 +188,13 @@ export interface AppData {
   tasks: Task[];
   routines: Routine[];
   routineProgress: Record<string, RoutineProgress>;
-  workouts: Workout[];
-  workoutHistory: WorkoutSession[];
-  todaysWorkout: TodaysWorkout | null;
+  /** Reusable exercise library. */
+  exercises: Exercise[];
+  /** Reusable training programs built from exercises. */
+  programs: Program[];
+  /** Completed program history (most recent first). */
+  sessions: WorkoutSession[];
+  todaysProgram: TodaysProgram | null;
   settings: Settings;
   /** True once seed data has been installed (prevents re-seeding). */
   seeded: boolean;
