@@ -14,6 +14,7 @@ import {
   programSummary,
 } from './logic';
 import { ExerciseForm, type ExerciseFormValue } from './ExerciseForm';
+import { ExerciseThumb } from './ExerciseThumb';
 
 type Tab = 'programs' | 'exercises' | 'history';
 type CatFilter = 'all' | WorkoutCategory;
@@ -114,7 +115,7 @@ export function WorkoutsScreen() {
             {visibleExercises.length === 0 && <div className="empty">Ingen øvelser her.</div>}
             {visibleExercises.map((e) => (
               <div key={e.id} className="card row">
-                <div className="icon" aria-hidden="true">{CATEGORY_EMOJI[e.category]}</div>
+                <ExerciseThumb exercise={e} />
                 <div className="grow">
                   <h3>{e.title}</h3>
                   <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>

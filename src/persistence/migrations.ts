@@ -2,6 +2,7 @@ import type { AppData } from '../store/types';
 import { CURRENT_VERSION, emptyAppData } from '../store/defaults';
 import { LIFE_AREAS } from '../data/lifeAreas';
 import { createId } from '../lib/id';
+import { builtinExercises, builtinPrograms } from '../data/exerciseLibrary';
 
 /**
  * Migration framework.
@@ -128,6 +129,35 @@ export const MIGRATIONS: Record<number, Migration> = {
     delete next.workoutHistory;
     delete next.todaysWorkout;
     return next;
+  },
+
+  // 2 -> 3: add the `image` field to exercises, and install the built-in
+  // illustrated exercise library + poster programs for existing users
+  // (idempotent by id, so user-created data and edits are preserved).
+  2: (data) => {
+    const existingExercises = asArray(data.exercises) as AnyRecord[];
+    const existingIds = new Set(
+      existingExercises.map((e) => (typeof e.id === 'string' ? e.id : '')),
+    );
+    // Ensure every existing exercise has an `image` field (default none).
+    const withImage = existingExercises.map((e) =>
+      'image' in e ? e : { ...e, image: null },
+    );
+
+    const newExercises = builtinExercises().filter((e) => !existingIds.has(e.id));
+
+    const existingPrograms = asArray(data.programs) as AnyRecord[];
+    const programIds = new Set(
+      existingPrograms.map((p) => (typeof p.id === 'string' ? p.id : '')),
+    );
+    const newPrograms = builtinPrograms().filter((p) => !programIds.has(p.id));
+
+    return {
+      ...data,
+      exercises: [...newExercises, ...withImage],
+      programs: [...existingPrograms, ...newPrograms],
+      version: 3,
+    };
   },
 };
 

@@ -78,7 +78,9 @@ describe('v1 -> v2: workouts become exercises + programs', () => {
   it('creates a program per workout with ordered exercise steps', () => {
     const m = runMigrations(v1);
     expect(m.version).toBe(CURRENT_VERSION);
-    expect(m.programs).toHaveLength(2);
+    // The two workout-derived programs exist (built-in poster programs are
+    // also added by the subsequent v2->v3 step).
+    expect(m.programs.filter((p) => ['w1', 'w2'].includes(p.id))).toHaveLength(2);
     const legs = m.programs.find((p) => p.id === 'w1');
     expect(legs?.title).toBe('Ben + core');
     expect(legs?.steps).toHaveLength(2);
@@ -121,5 +123,48 @@ describe('v1 -> v2: workouts become exercises + programs', () => {
     expect(m.workouts).toBeUndefined();
     expect(m.workoutHistory).toBeUndefined();
     expect(m.todaysWorkout).toBeUndefined();
+  });
+});
+
+describe('v2 -> v3: image field + built-in illustrated library', () => {
+  it('adds an image field to existing exercises without one', () => {
+    const m = runMigrations({
+      version: 2,
+      exercises: [{ id: 'mine', title: 'Custom', category: 'bodyweight', bodyPart: 'core' }],
+      programs: [],
+    });
+    expect(m.version).toBe(CURRENT_VERSION);
+    const mine = m.exercises.find((e) => e.id === 'mine');
+    expect(mine).toBeTruthy();
+    expect(mine).toHaveProperty('image', null);
+  });
+
+  it('installs the built-in exercises and poster programs', () => {
+    const m = runMigrations({ version: 2, exercises: [], programs: [] });
+    // A few known built-ins with images.
+    const squat = m.exercises.find((e) => e.id === 'ex-squat');
+    expect(squat?.title).toBe('Squat');
+    expect(squat?.image).toContain('exercise-images/squat.webp');
+    expect(m.programs.some((p) => p.id === 'program-core')).toBe(true);
+    expect(m.exercises.length).toBeGreaterThanOrEqual(27);
+  });
+
+  it('does not duplicate built-ins that already exist (idempotent)', () => {
+    const once = runMigrations({ version: 2, exercises: [], programs: [] });
+    const twice = runMigrations({ ...once, version: 2 });
+    const count = (arr: { id: string }[], id: string) =>
+      arr.filter((x) => x.id === id).length;
+    expect(count(twice.exercises, 'ex-squat')).toBe(1);
+    expect(count(twice.programs, 'program-core')).toBe(1);
+  });
+
+  it('preserves user-added exercises and their images', () => {
+    const m = runMigrations({
+      version: 2,
+      exercises: [{ id: 'mine', title: 'Custom', category: 'bodyweight', bodyPart: 'core', image: 'data:image/webp;base64,AAAA' }],
+      programs: [],
+    });
+    const mine = m.exercises.find((e) => e.id === 'mine');
+    expect(mine?.image).toBe('data:image/webp;base64,AAAA');
   });
 });

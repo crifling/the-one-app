@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 
 import type { Exercise, ProgramStep, WorkoutCategory } from '../../store/types';
 import { bodyPartName } from '../../data/bodyParts';
-import { CATEGORY_EMOJI, CATEGORY_LABELS } from './logic';
+import { CATEGORY_LABELS } from './logic';
+import { ExerciseThumb } from './ExerciseThumb';
 
 interface ExercisePickerProps {
   exercises: Exercise[];
@@ -98,9 +99,7 @@ export function ExercisePicker({
                 {n > 0 ? (
                   <div className="countbadge">×{n}</div>
                 ) : (
-                  <div className="icon" aria-hidden="true" style={{ width: 44, height: 44, fontSize: 20 }}>
-                    {CATEGORY_EMOJI[e.category]}
-                  </div>
+                  <ExerciseThumb exercise={e} size={44} />
                 )}
                 <div className="grow">
                   <h3 style={{ fontSize: 15 }}>{e.title}</h3>

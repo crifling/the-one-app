@@ -112,6 +112,11 @@ export interface Exercise {
   title: string;
   category: WorkoutCategory;
   bodyPart: BodyPartId;
+  /**
+   * Optional illustration shown when running a program. Either a bundled asset
+   * path (built-in exercises) or a data URI (user-uploaded photo). Null = none.
+   */
+  image: string | null;
   createdAt: string;
   updatedAt: string;
 }

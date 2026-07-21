@@ -1,5 +1,6 @@
 import type { AppData } from '../store/types';
 import { emptyAppData } from '../store/defaults';
+import { builtinExercises, builtinPrograms } from './exerciseLibrary';
 
 // Realistic seed data, installed only when no user data exists. Ids are stable
 // and human-readable so they are easy to reference while developing.
@@ -172,64 +173,8 @@ export function seedData(): AppData {
         updatedAt: T,
       },
     ],
-    exercises: [
-      { id: 'ex-reverse-lunges', title: 'Reverse lunges', category: 'speediance', bodyPart: 'legs', createdAt: T, updatedAt: T },
-      { id: 'ex-rdl', title: 'Romanian deadlift', category: 'speediance', bodyPart: 'legs', createdAt: T, updatedAt: T },
-      { id: 'ex-woodchops', title: 'Woodchops', category: 'speediance', bodyPart: 'core', createdAt: T, updatedAt: T },
-      { id: 'ex-squats', title: 'Squats', category: 'bodyweight', bodyPart: 'legs', createdAt: T, updatedAt: T },
-      { id: 'ex-pushups', title: 'Push-ups', category: 'bodyweight', bodyPart: 'chest', createdAt: T, updatedAt: T },
-      { id: 'ex-plank', title: 'Plank', category: 'bodyweight', bodyPart: 'core', createdAt: T, updatedAt: T },
-      { id: 'ex-air-squats', title: 'Air squats', category: 'bodyweight', bodyPart: 'legs', createdAt: T, updatedAt: T },
-      { id: 'ex-incline-pushups', title: 'Incline push-ups', category: 'bodyweight', bodyPart: 'chest', createdAt: T, updatedAt: T },
-      { id: 'ex-cat-cow', title: 'Cat-cow', category: 'mobility', bodyPart: 'back', createdAt: T, updatedAt: T },
-      { id: 'ex-wgs', title: 'World’s greatest stretch', category: 'mobility', bodyPart: 'fullbody', createdAt: T, updatedAt: T },
-      { id: 'ex-glute-bridge', title: 'Glute bridge', category: 'bodyweight', bodyPart: 'glutes', createdAt: T, updatedAt: T },
-    ],
-    programs: [
-      {
-        id: 'program-legs',
-        title: 'Ben + core',
-        steps: [
-          { id: 'ps-legs-1', kind: 'exercise', exerciseId: 'ex-reverse-lunges', sets: 3, mode: 'reps', amount: 10, restSeconds: 60, weightKg: 20 },
-          { id: 'ps-legs-2', kind: 'exercise', exerciseId: 'ex-rdl', sets: 3, mode: 'reps', amount: 10, restSeconds: 75, weightKg: 40 },
-          { id: 'ps-legs-3', kind: 'pause', seconds: 90 },
-          { id: 'ps-legs-4', kind: 'exercise', exerciseId: 'ex-woodchops', sets: 3, mode: 'reps', amount: 12, restSeconds: 45, weightKg: 15 },
-        ],
-        createdAt: T,
-        updatedAt: T,
-      },
-      {
-        id: 'program-fullbody',
-        title: '20 min. Full Body',
-        steps: [
-          { id: 'ps-fb-1', kind: 'exercise', exerciseId: 'ex-squats', sets: 3, mode: 'reps', amount: 12, restSeconds: 45, weightKg: 0 },
-          { id: 'ps-fb-2', kind: 'exercise', exerciseId: 'ex-pushups', sets: 3, mode: 'reps', amount: 10, restSeconds: 45, weightKg: 0 },
-          { id: 'ps-fb-3', kind: 'exercise', exerciseId: 'ex-plank', sets: 3, mode: 'time', amount: 40, restSeconds: 30, weightKg: 0 },
-        ],
-        createdAt: T,
-        updatedAt: T,
-      },
-      {
-        id: 'program-hotel',
-        title: 'Hotel workout',
-        steps: [
-          { id: 'ps-h-1', kind: 'exercise', exerciseId: 'ex-air-squats', sets: 3, mode: 'reps', amount: 15, restSeconds: 30, weightKg: 0 },
-          { id: 'ps-h-2', kind: 'exercise', exerciseId: 'ex-incline-pushups', sets: 3, mode: 'reps', amount: 12, restSeconds: 30, weightKg: 0 },
-        ],
-        createdAt: T,
-        updatedAt: T,
-      },
-      {
-        id: 'program-mobility',
-        title: 'Morgenmobilitet',
-        steps: [
-          { id: 'ps-mob-1', kind: 'exercise', exerciseId: 'ex-cat-cow', sets: 2, mode: 'time', amount: 60, restSeconds: 0, weightKg: 0 },
-          { id: 'ps-mob-2', kind: 'exercise', exerciseId: 'ex-wgs', sets: 2, mode: 'time', amount: 90, restSeconds: 0, weightKg: 0 },
-        ],
-        createdAt: T,
-        updatedAt: T,
-      },
-    ],
-    todaysProgram: { programId: 'program-legs', date: '2026-07-21' },
+    exercises: builtinExercises(),
+    programs: builtinPrograms(),
+    todaysProgram: { programId: 'program-ben-bagkaede', date: '2026-07-21' },
   };
 }

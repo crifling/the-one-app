@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { BodyPartId, WorkoutCategory } from '../../store/types';
 import { BODY_PARTS } from '../../data/bodyParts';
 import { CATEGORY_LABELS, categorySupportsWeight } from './logic';
+import { fileToResizedDataUrl } from './imageUpload';
 
 export interface ExerciseFormValue {
   title: string;
   category: WorkoutCategory;
   bodyPart: BodyPartId;
+  image: string | null;
 }
 
 interface ExerciseFormProps {
@@ -22,11 +24,26 @@ export function ExerciseForm({ onSubmit, onCancel }: ExerciseFormProps) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<WorkoutCategory>('bodyweight');
   const [bodyPart, setBodyPart] = useState<BodyPartId>('legs');
+  const [image, setImage] = useState<string | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImageBusy(true);
+    try {
+      setImage(await fileToResizedDataUrl(file));
+    } finally {
+      setImageBusy(false);
+    }
+  }
 
   function submit() {
     const trimmed = title.trim();
     if (!trimmed) return;
-    onSubmit({ title: trimmed, category, bodyPart });
+    onSubmit({ title: trimmed, category, bodyPart, image });
   }
 
   return (
@@ -94,6 +111,47 @@ export function ExerciseForm({ onSubmit, onCancel }: ExerciseFormProps) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="field">
+            <span>Billede (valgfrit)</span>
+            <div className="row" style={{ gap: 12 }}>
+              {image ? (
+                <img className="exthumb" src={image} alt="" style={{ width: 64, height: 64 }} />
+              ) : (
+                <div className="icon" aria-hidden="true" style={{ width: 64, height: 64 }}>
+                  🖼️
+                </div>
+              )}
+              <div className="grow">
+                <button
+                  type="button"
+                  className="btn sm"
+                  onClick={() => fileInput.current?.click()}
+                  disabled={imageBusy}
+                >
+                  {imageBusy ? 'Indlæser…' : image ? 'Skift billede' : 'Vælg billede'}
+                </button>
+                {image && (
+                  <button
+                    type="button"
+                    className="btn sm"
+                    style={{ marginLeft: 8 }}
+                    onClick={() => setImage(null)}
+                  >
+                    Fjern
+                  </button>
+                )}
+              </div>
+            </div>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              style={{ display: 'none' }}
+            />
+            <div className="meta">Vises når du kører et program med øvelsen.</div>
           </div>
         </div>
 

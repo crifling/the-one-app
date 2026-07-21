@@ -2,7 +2,7 @@ import type { AppData } from './types';
 import { LIFE_AREAS } from '../data/lifeAreas';
 
 /** Current schema version of the persisted document. */
-export const CURRENT_VERSION = 2;
+export const CURRENT_VERSION = 3;
 
 /** An empty document at the current schema version (no seed data). */
 export function emptyAppData(): AppData {
