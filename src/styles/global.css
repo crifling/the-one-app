@@ -33,6 +33,13 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  /* Guard against any child ever forcing the page wider than the screen,
+     which on iOS Safari zooms the whole app out into a shrunken column with
+     grey margins (and pushes the 5th nav item off-screen). clip contains
+     stray horizontal overflow without creating a scroll container. */
+  overflow-x: clip;
 }
 
 body {
@@ -40,9 +47,16 @@ body {
     system-ui, sans-serif;
   background: #d7d4ce;
   color: var(--text);
-  display: flex;
-  justify-content: center;
   line-height: 1.4;
+}
+
+/* The React mount node must fill the width. Centering lives on `.app`
+   (margin: 0 auto). Previously `body` was a flex container centering the
+   app, which made #root a flex item that shrank to its content's natural
+   width — so screens with narrow content (Træning, Rutiner) rendered as a
+   narrow column with grey margins instead of filling the screen. */
+#root {
+  width: 100%;
 }
 
 a {
@@ -81,10 +95,12 @@ h3 {
 .app {
   width: 100%;
   max-width: 430px;
+  margin: 0 auto;
   min-height: 100dvh;
   background: var(--bg);
   padding-bottom: calc(94px + env(safe-area-inset-bottom));
   position: relative;
+  overflow-x: clip;
 }
 
 .top {
@@ -157,12 +173,24 @@ main {
 }
 
 .card.tappable {
-  display: block;
   width: 100%;
   text-align: left;
 }
+/* Only force block when the card is NOT a flex row — otherwise this would
+   override `.row`'s flex layout (higher specificity) and stack the children,
+   leaving the right half of the card empty. */
+.card.tappable:not(.row) {
+  display: block;
+}
 
 .row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* Ensure a tappable row card stays a flex row (equal specificity to
+   `.card.tappable`, declared later so flex wins). */
+.card.row {
   display: flex;
   align-items: center;
   gap: 12px;
