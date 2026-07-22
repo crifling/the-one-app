@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 
-import type { BodyPartId, WorkoutCategory } from '../../store/types';
+import type { BodyPartId, Exercise, WorkoutCategory } from '../../store/types';
 import { BODY_PARTS } from '../../data/bodyParts';
 import { CATEGORY_LABELS, categorySupportsWeight } from './logic';
 import { fileToResizedDataUrl } from './imageUpload';
@@ -15,16 +15,21 @@ export interface ExerciseFormValue {
 interface ExerciseFormProps {
   onSubmit: (value: ExerciseFormValue) => void;
   onCancel: () => void;
+  /** When set, the form edits this exercise instead of creating a new one. */
+  exercise?: Exercise;
+  /** Delete the exercise being edited. Only used in edit mode. */
+  onDelete?: () => void;
 }
 
 const CATEGORIES: WorkoutCategory[] = ['bodyweight', 'mobility', 'speediance'];
 
-/** Bottom-sheet form for creating a new library exercise. */
-export function ExerciseForm({ onSubmit, onCancel }: ExerciseFormProps) {
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<WorkoutCategory>('bodyweight');
-  const [bodyPart, setBodyPart] = useState<BodyPartId>('legs');
-  const [image, setImage] = useState<string | null>(null);
+/** Bottom-sheet form for creating a new library exercise or editing an existing one. */
+export function ExerciseForm({ onSubmit, onCancel, exercise, onDelete }: ExerciseFormProps) {
+  const editing = exercise != null;
+  const [title, setTitle] = useState(exercise?.title ?? '');
+  const [category, setCategory] = useState<WorkoutCategory>(exercise?.category ?? 'bodyweight');
+  const [bodyPart, setBodyPart] = useState<BodyPartId>(exercise?.bodyPart ?? 'legs');
+  const [image, setImage] = useState<string | null>(exercise?.image ?? null);
   const [imageBusy, setImageBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -53,10 +58,10 @@ export function ExerciseForm({ onSubmit, onCancel }: ExerciseFormProps) {
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="sheet" role="dialog" aria-label="Ny øvelse">
+      <div className="sheet" role="dialog" aria-label={editing ? 'Rediger øvelse' : 'Ny øvelse'}>
         <div className="grabber" />
         <div className="sheet-head">
-          <h2>Ny øvelse</h2>
+          <h2>{editing ? 'Rediger øvelse' : 'Ny øvelse'}</h2>
         </div>
         <div className="sheet-scroll">
           <label className="field">
@@ -153,6 +158,26 @@ export function ExerciseForm({ onSubmit, onCancel }: ExerciseFormProps) {
             />
             <div className="meta">Vises når du kører et program med øvelsen.</div>
           </div>
+
+          {editing && onDelete && (
+            <div className="field">
+              <button
+                type="button"
+                className="btn danger block"
+                onClick={() => {
+                  if (
+                    confirm(
+                      `Slet øvelsen "${exercise.title}"? Den fjernes også fra programmer. Dette kan ikke fortrydes.`,
+                    )
+                  ) {
+                    onDelete();
+                  }
+                }}
+              >
+                Slet øvelse
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="actions" style={{ marginTop: 6 }}>
@@ -160,7 +185,7 @@ export function ExerciseForm({ onSubmit, onCancel }: ExerciseFormProps) {
             Annullér
           </button>
           <button type="button" className="btn primary" onClick={submit} disabled={!title.trim()}>
-            Gem øvelse
+            {editing ? 'Gem ændringer' : 'Gem øvelse'}
           </button>
         </div>
       </div>
