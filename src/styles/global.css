@@ -583,6 +583,7 @@ main {
 
 /* Workout player --------------------------------------------------------- */
 .player {
+  position: relative;
   height: 220px;
   border-radius: var(--radius-xl);
   background: linear-gradient(145deg, #e2ece7, #c8d9d0);
@@ -597,10 +598,12 @@ main {
   background: var(--card);
 }
 .player.compact {
-  height: 168px;
+  height: 210px;
   margin-bottom: 12px;
 }
 .player img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -636,7 +639,7 @@ main {
   gap: 6px;
 }
 .ring-num {
-  font-size: 62px;
+  font-size: 46px;
   font-weight: 850;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
