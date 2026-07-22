@@ -8,6 +8,8 @@ interface CountdownRingProps {
   display: string;
   /** Small caption under the number (e.g. "GØR KLAR"). */
   caption?: string;
+  /** Display diameter in px (default 260). */
+  size?: number;
 }
 
 const SIZE = 260;
@@ -16,14 +18,19 @@ const R = (SIZE - STROKE) / 2;
 const C = 2 * Math.PI * R;
 
 /** Circular countdown with a depleting progress arc. */
-export function CountdownRing({ remaining, total, tone, display, caption }: CountdownRingProps) {
+export function CountdownRing({ remaining, total, tone, display, caption, size }: CountdownRingProps) {
   const frac = total > 0 ? Math.max(0, Math.min(1, remaining / total)) : 0;
   const offset = C * (1 - frac);
   const urgent = remaining <= 3 && remaining > 0;
   const stroke = urgent ? 'var(--danger)' : tone === 'rest' ? '#c9a24a' : 'var(--accent)';
 
   return (
-    <div className={`ring${urgent ? ' urgent' : ''}`} role="timer" aria-live="off">
+    <div
+      className={`ring${urgent ? ' urgent' : ''}`}
+      role="timer"
+      aria-live="off"
+      style={size ? { width: size } : undefined}
+    >
       <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} aria-hidden="true">
         <circle
           cx={SIZE / 2}

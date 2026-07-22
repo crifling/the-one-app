@@ -596,6 +596,10 @@ main {
 .player.hasimage {
   background: var(--card);
 }
+.player.compact {
+  height: 168px;
+  margin-bottom: 12px;
+}
 .player img {
   width: 100%;
   height: 100%;

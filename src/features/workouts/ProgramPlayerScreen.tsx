@@ -242,21 +242,26 @@ export function ProgramPlayerScreen() {
       ? ` · ${exStep.weightKg} kg`
       : '';
 
-  // Timed set — get-ready / running → work ring.
+  // Timed set — get-ready / running → exercise image on top, ring below.
   if (exStep.mode === 'time' && (timed === 'getready' || timed === 'running')) {
     const isReady = timed === 'getready';
     return (
       <main>
+        <div className={`player compact${exercise?.image ? ' hasimage' : ''}`} aria-hidden="true">
+          {exercise?.image ? <img src={exercise.image} alt="" /> : CATEGORY_EMOJI[category]}
+        </div>
         <div className="center">
           <div className="counter">Øvelse {exerciseNumber} af {exerciseTotal} · sæt {setNo} af {exStep.sets}</div>
+          <div className="exercise" style={{ fontSize: 23 }}>{exercise?.title ?? 'Øvelse'}</div>
         </div>
         <div className="ringwrap">
           <CountdownRing
             remaining={remaining}
             total={total}
             tone="work"
+            size={196}
             display={isReady ? String(remaining) : formatClock(remaining)}
-            caption={isReady ? 'GØR KLAR' : (exercise?.title ?? 'Øvelse').toUpperCase()}
+            caption={isReady ? 'GØR KLAR' : undefined}
           />
         </div>
         {isReady ? (
