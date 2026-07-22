@@ -11,8 +11,8 @@ import {
 } from './logic';
 
 const exercises: Exercise[] = [
-  { id: 'ex1', title: 'Reverse lunges', category: 'speediance', bodyPart: 'legs', createdAt: '', updatedAt: '' },
-  { id: 'ex2', title: 'Plank', category: 'bodyweight', bodyPart: 'core', createdAt: '', updatedAt: '' },
+  { id: 'ex1', title: 'Reverse lunges', category: 'speediance', bodyPart: 'legs', image: null, createdAt: '', updatedAt: '' },
+  { id: 'ex2', title: 'Plank', category: 'bodyweight', bodyPart: 'core', image: null, createdAt: '', updatedAt: '' },
 ];
 
 const program: Program = {

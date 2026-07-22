@@ -2,6 +2,7 @@ import type { AppData } from '../store/types';
 import { CURRENT_VERSION, emptyAppData } from '../store/defaults';
 import { LIFE_AREAS } from '../data/lifeAreas';
 import { createId } from '../lib/id';
+import { builtinExercises, builtinPrograms } from '../data/exerciseLibrary';
 
 /**
  * Migration framework.
@@ -128,6 +129,85 @@ export const MIGRATIONS: Record<number, Migration> = {
     delete next.workoutHistory;
     delete next.todaysWorkout;
     return next;
+  },
+
+  // 2 -> 3: add the `image` field to exercises, and install the built-in
+  // illustrated exercise library + poster programs for existing users
+  // (idempotent by id, so user-created data and edits are preserved).
+  2: (data) => {
+    const existingExercises = asArray(data.exercises) as AnyRecord[];
+    const existingIds = new Set(
+      existingExercises.map((e) => (typeof e.id === 'string' ? e.id : '')),
+    );
+    // Ensure every existing exercise has an `image` field (default none).
+    const withImage = existingExercises.map((e) =>
+      'image' in e ? e : { ...e, image: null },
+    );
+
+    const newExercises = builtinExercises().filter((e) => !existingIds.has(e.id));
+
+    const existingPrograms = asArray(data.programs) as AnyRecord[];
+    const programIds = new Set(
+      existingPrograms.map((p) => (typeof p.id === 'string' ? p.id : '')),
+    );
+    const newPrograms = builtinPrograms().filter((p) => !programIds.has(p.id));
+
+    return {
+      ...data,
+      exercises: [...newExercises, ...withImage],
+      programs: [...existingPrograms, ...newPrograms],
+      version: 3,
+    };
+  },
+
+  // 3 -> 4: remove the original placeholder programs and their orphaned
+  // placeholder exercises, now that the illustrated built-in library exists.
+  // Safe by construction: only removes the known old program ids and
+  // exercises that are NOT built-in, have NO user image, and are NOT used by
+  // any remaining program — so built-ins, user photos and anything the user
+  // still uses in a program are preserved.
+  3: (data) => {
+    const OLD_PROGRAM_IDS = new Set([
+      'workout-legs', 'workout-fullbody', 'workout-hotel', 'workout-mobility',
+      'program-legs', 'program-fullbody', 'program-hotel', 'program-mobility',
+    ]);
+    const builtinIds = new Set(builtinExercises().map((e) => e.id));
+
+    const allPrograms = asArray(data.programs) as AnyRecord[];
+    const isOld = (p: AnyRecord) => typeof p.id === 'string' && OLD_PROGRAM_IDS.has(p.id);
+    const programs = allPrograms.filter((p) => !isOld(p));
+
+    const stepExerciseIds = (ps: AnyRecord[]) => {
+      const set = new Set<string>();
+      for (const p of ps) {
+        for (const s of asArray(p.steps) as AnyRecord[]) {
+          if (s.kind === 'exercise' && typeof s.exerciseId === 'string') set.add(s.exerciseId);
+        }
+      }
+      return set;
+    };
+    // Exercises that belonged to the removed old programs...
+    const oldReferenced = stepExerciseIds(allPrograms.filter(isOld));
+    // ...but are still kept if a remaining program uses them.
+    const stillReferenced = stepExerciseIds(programs);
+
+    const exercises = (asArray(data.exercises) as AnyRecord[]).filter((e) => {
+      const id = typeof e.id === 'string' ? e.id : '';
+      if (builtinIds.has(id)) return true; // keep built-ins
+      if (e.image) return true; // keep user-uploaded photos
+      if (stillReferenced.has(id)) return true; // keep if used in a remaining program
+      // Drop only exercises that belonged to a removed old program (placeholders);
+      // never touch a user-created exercise that was never in an old program.
+      return !oldReferenced.has(id);
+    });
+
+    const today = data.todaysProgram as AnyRecord | null | undefined;
+    const todaysProgram =
+      today && typeof today.programId === 'string' && OLD_PROGRAM_IDS.has(today.programId)
+        ? null
+        : (today ?? null);
+
+    return { ...data, programs, exercises, todaysProgram, version: 4 };
   },
 };
 

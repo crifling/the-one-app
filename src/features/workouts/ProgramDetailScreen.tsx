@@ -9,6 +9,7 @@ import { bodyPartName } from '../../data/bodyParts';
 import { createId } from '../../lib/id';
 import { todayIso } from '../../lib/dates';
 import { Stepper } from './Stepper';
+import { ExerciseThumb } from './ExerciseThumb';
 import { ExercisePicker } from './ExercisePicker';
 import { ExerciseForm, type ExerciseFormValue } from './ExerciseForm';
 import {
@@ -270,6 +271,7 @@ export function ProgramDetailScreen() {
       <div key={step.id} className="step exercise">
         <div className="stephead">
           <div className="idx">{index + 1}</div>
+          {exercise && <ExerciseThumb exercise={exercise} size={40} />}
           <div className="grow">
             <h3>{title}</h3>
             {exercise && (

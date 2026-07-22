@@ -174,7 +174,13 @@ export function ProgramPlayerScreen() {
 
   return (
     <main>
-      <div className="player" aria-hidden="true">{CATEGORY_EMOJI[category]}</div>
+      <div className={`player${exercise?.image ? ' hasimage' : ''}`} aria-hidden="true">
+        {exercise?.image ? (
+          <img src={exercise.image} alt="" />
+        ) : (
+          CATEGORY_EMOJI[category]
+        )}
+      </div>
       <div className="center">
         <div className="counter">Øvelse {exerciseNumber} af {exerciseTotal}</div>
         <div className="exercise">{exercise?.title ?? 'Øvelse'}</div>

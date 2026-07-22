@@ -91,7 +91,7 @@ export interface StoreActions {
 
   // exercises (library)
   addExercise: (input: NewExerciseInput) => string;
-  updateExercise: (id: string, patch: Partial<Pick<Exercise, 'title' | 'category' | 'bodyPart'>>) => void;
+  updateExercise: (id: string, patch: Partial<Pick<Exercise, 'title' | 'category' | 'bodyPart' | 'image'>>) => void;
   deleteExercise: (id: string) => void;
 
   // programs
@@ -108,6 +108,7 @@ export interface NewExerciseInput {
   title: string;
   category: WorkoutCategory;
   bodyPart: BodyPartId;
+  image?: string | null;
 }
 
 export interface AppState extends AppData, StoreActions {
@@ -342,6 +343,7 @@ export const useStore = create<AppState>()(
           title: input.title.trim(),
           category: input.category,
           bodyPart: input.bodyPart,
+          image: input.image ?? null,
           createdAt: ts,
           updatedAt: ts,
         };
