@@ -159,6 +159,56 @@ export const MIGRATIONS: Record<number, Migration> = {
       version: 3,
     };
   },
+
+  // 3 -> 4: remove the original placeholder programs and their orphaned
+  // placeholder exercises, now that the illustrated built-in library exists.
+  // Safe by construction: only removes the known old program ids and
+  // exercises that are NOT built-in, have NO user image, and are NOT used by
+  // any remaining program — so built-ins, user photos and anything the user
+  // still uses in a program are preserved.
+  3: (data) => {
+    const OLD_PROGRAM_IDS = new Set([
+      'workout-legs', 'workout-fullbody', 'workout-hotel', 'workout-mobility',
+      'program-legs', 'program-fullbody', 'program-hotel', 'program-mobility',
+    ]);
+    const builtinIds = new Set(builtinExercises().map((e) => e.id));
+
+    const allPrograms = asArray(data.programs) as AnyRecord[];
+    const isOld = (p: AnyRecord) => typeof p.id === 'string' && OLD_PROGRAM_IDS.has(p.id);
+    const programs = allPrograms.filter((p) => !isOld(p));
+
+    const stepExerciseIds = (ps: AnyRecord[]) => {
+      const set = new Set<string>();
+      for (const p of ps) {
+        for (const s of asArray(p.steps) as AnyRecord[]) {
+          if (s.kind === 'exercise' && typeof s.exerciseId === 'string') set.add(s.exerciseId);
+        }
+      }
+      return set;
+    };
+    // Exercises that belonged to the removed old programs...
+    const oldReferenced = stepExerciseIds(allPrograms.filter(isOld));
+    // ...but are still kept if a remaining program uses them.
+    const stillReferenced = stepExerciseIds(programs);
+
+    const exercises = (asArray(data.exercises) as AnyRecord[]).filter((e) => {
+      const id = typeof e.id === 'string' ? e.id : '';
+      if (builtinIds.has(id)) return true; // keep built-ins
+      if (e.image) return true; // keep user-uploaded photos
+      if (stillReferenced.has(id)) return true; // keep if used in a remaining program
+      // Drop only exercises that belonged to a removed old program (placeholders);
+      // never touch a user-created exercise that was never in an old program.
+      return !oldReferenced.has(id);
+    });
+
+    const today = data.todaysProgram as AnyRecord | null | undefined;
+    const todaysProgram =
+      today && typeof today.programId === 'string' && OLD_PROGRAM_IDS.has(today.programId)
+        ? null
+        : (today ?? null);
+
+    return { ...data, programs, exercises, todaysProgram, version: 4 };
+  },
 };
 
 /**

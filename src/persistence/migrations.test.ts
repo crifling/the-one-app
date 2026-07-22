@@ -168,3 +168,49 @@ describe('v2 -> v3: image field + built-in illustrated library', () => {
     expect(mine?.image).toBe('data:image/webp;base64,AAAA');
   });
 });
+
+describe('v3 -> v4: remove old placeholders, keep everything else', () => {
+  const v3 = {
+    version: 3,
+    todaysProgram: { programId: 'program-legs', date: '2026-07-21' },
+    programs: [
+      { id: 'program-legs', title: 'Ben + core', steps: [{ id: 's', kind: 'exercise', exerciseId: 'old-1', sets: 3, mode: 'reps', amount: 10, restSeconds: 60, weightKg: 0 }] },
+      { id: 'program-hotel', title: 'Hotel workout', steps: [{ id: 's', kind: 'exercise', exerciseId: 'old-2', sets: 3, mode: 'reps', amount: 10, restSeconds: 60, weightKg: 0 }] },
+      { id: 'my-program', title: 'Mit program', steps: [{ id: 's', kind: 'exercise', exerciseId: 'mine-used', sets: 3, mode: 'reps', amount: 10, restSeconds: 60, weightKg: 0 }] },
+    ],
+    exercises: [
+      { id: 'old-1', title: 'Reverse lunges', category: 'speediance', bodyPart: 'legs', image: null }, // placeholder from program-legs -> remove
+      { id: 'old-2', title: 'Air squats', category: 'bodyweight', bodyPart: 'legs', image: null }, // placeholder from program-hotel -> remove
+      { id: 'mine-unused', title: 'Ny egen øvelse', category: 'bodyweight', bodyPart: 'core', image: null }, // user, never in an old program -> keep
+      { id: 'mine-used', title: 'Min øvelse', category: 'bodyweight', bodyPart: 'core', image: null }, // user, used by my-program -> keep
+      { id: 'mine-photo', title: 'Med foto', category: 'bodyweight', bodyPart: 'core', image: 'data:image/webp;base64,AAAA' }, // user photo -> keep
+      { id: 'ex-squat', title: 'Squat', category: 'bodyweight', bodyPart: 'legs', image: '/x.webp' }, // built-in -> keep
+    ],
+  };
+
+  it('removes the old placeholder programs', () => {
+    const m = runMigrations(v3);
+    expect(m.version).toBe(CURRENT_VERSION);
+    expect(m.programs.some((p) => p.id === 'program-legs')).toBe(false);
+    expect(m.programs.some((p) => p.id === 'my-program')).toBe(true);
+  });
+
+  it('removes orphaned image-less placeholder exercises', () => {
+    const ids = runMigrations(v3).exercises.map((e) => e.id);
+    expect(ids).not.toContain('old-1');
+    expect(ids).not.toContain('old-2');
+  });
+
+  it('keeps built-ins, user photos, and user exercises (used or not)', () => {
+    const ids = runMigrations(v3).exercises.map((e) => e.id);
+    expect(ids).toContain('ex-squat');
+    expect(ids).toContain('mine-photo');
+    expect(ids).toContain('mine-used');
+    // A user-created exercise never part of an old program is preserved.
+    expect(ids).toContain('mine-unused');
+  });
+
+  it('clears todaysProgram if it pointed at a removed program', () => {
+    expect(runMigrations(v3).todaysProgram).toBeNull();
+  });
+});
