@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { TopBar } from '../../components/TopBar';
 import { useToast } from '../../components/ToastProvider';
 import { useStore } from '../../store/store';
-import type { WorkoutCategory } from '../../store/types';
+import type { Exercise, WorkoutCategory } from '../../store/types';
 import { bodyPartName } from '../../data/bodyParts';
 import {
   CATEGORY_EMOJI,
@@ -33,6 +33,7 @@ export function WorkoutsScreen() {
   const [tab, setTab] = useState<Tab>('programs');
   const [catFilter, setCatFilter] = useState<CatFilter>('all');
   const [creatingExercise, setCreatingExercise] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
 
   const eyebrow = tab === 'history' ? 'Log' : 'Bibliotek';
 
@@ -46,6 +47,20 @@ export function WorkoutsScreen() {
     setCreatingExercise(false);
     setCatFilter('all');
     showToast('Øvelse oprettet.');
+  }
+
+  function saveExercise(value: ExerciseFormValue) {
+    if (!editingExercise) return;
+    store.updateExercise(editingExercise.id, value);
+    setEditingExercise(null);
+    showToast('Øvelse gemt.');
+  }
+
+  function deleteExercise() {
+    if (!editingExercise) return;
+    store.deleteExercise(editingExercise.id);
+    setEditingExercise(null);
+    showToast('Øvelse slettet.');
   }
 
   const visibleExercises = useMemo(
@@ -114,7 +129,13 @@ export function WorkoutsScreen() {
             </div>
             {visibleExercises.length === 0 && <div className="empty">Ingen øvelser her.</div>}
             {visibleExercises.map((e) => (
-              <div key={e.id} className="card row">
+              <button
+                key={e.id}
+                type="button"
+                className="card row tappable"
+                aria-label={`Rediger ${e.title}`}
+                onClick={() => setEditingExercise(e)}
+              >
                 <ExerciseThumb exercise={e} />
                 <div className="grow">
                   <h3>{e.title}</h3>
@@ -126,19 +147,8 @@ export function WorkoutsScreen() {
                     {categorySupportsWeight(e.category) && <span className="tag muted">vægt</span>}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="iconbtn"
-                  aria-label={`Slet ${e.title}`}
-                  onClick={() => {
-                    if (confirm(`Slet øvelsen "${e.title}"? Den fjernes også fra programmer.`)) {
-                      store.deleteExercise(e.id);
-                    }
-                  }}
-                >
-                  🗑
-                </button>
-              </div>
+                <span className="chev" aria-hidden="true">›</span>
+              </button>
             ))}
           </>
         )}
@@ -163,6 +173,16 @@ export function WorkoutsScreen() {
 
       {creatingExercise && (
         <ExerciseForm onSubmit={createExercise} onCancel={() => setCreatingExercise(false)} />
+      )}
+
+      {editingExercise && (
+        <ExerciseForm
+          key={editingExercise.id}
+          exercise={editingExercise}
+          onSubmit={saveExercise}
+          onDelete={deleteExercise}
+          onCancel={() => setEditingExercise(null)}
+        />
       )}
     </>
   );
